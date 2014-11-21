@@ -29,6 +29,7 @@ DEFAULT = {
 }
 TIME_COMPRESSION = 360  # 350 --> 1h = 10sec
 GRANULARITY = 0.5  # in seconds
+GRACE_PERIOD = 3  # in seconds
 
 LiftState = Enum('LiftState', 'moving loading ready')
 Event = Enum('Event', 'buttonpress stepin stepout queue')
@@ -124,7 +125,7 @@ class Simulation:
         '''Run a single step of the simulation.'''
         self.step_counter += 1
         elapsed = time() - self.start_time
-        log.debug('Step %d (@ %.6f ms)', self.step_counter, elapsed)
+        log.debug('Step %d (%.3f seconds in)', self.step_counter, elapsed)
         for person in self.people:
             if person.action_time is None:
                 continue
@@ -136,9 +137,16 @@ class Simulation:
 
     def run(self):
         '''Run the simulation.'''
-        self.start_time = time()
         log.debug('Simulation started.')
-        while any((person.destination is not None for person in self.people)):
+        duration = self.description['simulation']['duration_min']
+        self.start_time = time()
+        hard_limit = self.start_time + duration + GRACE_PERIOD
+        overdue = lambda: time() > hard_limit
+        done = lambda: all((p.destination is None for p in self.people))
+        while not done():
+            if overdue():
+                log.error('Hard time limit hit')
+                break
             self.step()
         log.debug('Simulation ended.')
 
