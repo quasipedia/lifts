@@ -2,13 +2,17 @@
 '''
 A Lift simulator.
 '''
-import logging
 from copy import deepcopy
 from time import time, sleep
 from random import choice, gauss
 
 #import toml
-from enum import Enum
+
+from log import log
+from person import Person
+from floor import Floor
+from lift import Lift
+from enums import LiftStatus, PersonStatus
 
 
 DEFAULT = {
@@ -31,130 +35,14 @@ TIME_COMPRESSION = 1200  # 360 --> 1h = 10sec
 GRANULARITY = 0.3  # in seconds
 GRACE_PERIOD = 1  # in seconds
 
-LiftStatus = Enum('LiftStatus', 'moving loading ready')
-PersonStatus = Enum('PersonStatus', 'busy moving done')
-Event = Enum('Event', 'buttonpress')
-Dirs = Enum('Dirs', 'up down')
-
-logging.basicConfig(
-    format='%(asctime)s - %(levelname)-8s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S %03d',
-    level=logging.DEBUG)
-log = logging.getLogger('lifts')
-
-
-class Person:
-
-    '''
-    A person in the simulation.
-
-    Args:
-        simulation (Simulation): the simulation in which the person lives
-        pid (str): a unique id for the person
-        status (PersonStatus): the initial state of the person
-        location (Floor or None): floor or None [not in the building]
-        destination (Floor): floor or None [not in the building]
-        trig_time: time at which to trig the commute
-    '''
-
-    def __init__(self, simulation, pid, status, location, destination,
-                 trig_time):
-        self.simulation = simulation
-        self.emit = simulation.listen
-        self.pid = pid
-        self.status = status
-        self.location = location
-        self.destination = destination
-        self.trig_time = trig_time
-        self.lift = None  # There is no lift assiciated to this person
-
-    def _enter_building(self):
-        '''Enter the building.'''
-        log.info('%s has entered the building.', self.pid)
-        self.location = 0
-
-    def _move(self):
-        if (self.lift.status != LiftStatus.moving and
-                self.location == self.destination):
-            log.info('%s has reached their destination.', self.pid)
-            self.lift.exit(self)
-            self.status = PersonStatus.done
-        else:
-            self.status = PersonStatus.moving
-        direction = Dirs.up if self.location < self.destination else Dirs.down
-        self.emit(Event.buttonpress, direction=direction)
-
-    def step(self, elapsed):
-        '''Perform the next action.'''
-        if self.status == PersonStatus.done:
-            return
-        if self.status == PersonStatus.busy:
-            if elapsed > self.trig_time:
-                self._enter_building()
-        # Entering the building needs to fall through the following case too
-        if self.status == PersonStatus.moving:
-            self._move()
-
-
-class Lift:
-
-    '''
-    A lift in the simulation.
-
-    Args:
-        simulation (Simulation): the simulation in which the lift exists
-        lift_description (dict): this is a dictionary that contains:
-            name: the name of the lift
-            capacity: the maximum capacity
-            pass_sec: the time it takes the lift to transit through a floor
-            accel_sec: the time it takes to start/stop at a floor
-            load_sec: the time the doors stay open for
-        status (LiftStatus): the initial state of the lift
-        location (Floor): floor where the lift currently is
-    '''
-
-    def __init__(self, simulation, lift_description, status, location):
-        self.simulation = simulation
-        for k, v in lift_description.items():
-            setattr(self, k, v)
-        self.status = status
-        self.location = location
-        self.people = []  # Nobody is in the lift
-
-    def enter(self, person):
-        self.people.append(person)
-
-    def exit(self, person):
-        self.people.remove(person)
-
-    def empty_slot(self):
-        return len(self.people < self.capacity)
-
-
-class Floor:
-
-    '''
-    A floor in the simulation.
-
-    Args:
-        simulation (Simulation): the simulation in which the floor exists
-        floor_description (dict): this is a dictionary that contains:
-            level (int): the level of the floor
-            is_exit(bool): True if the floor is an exit point of the building
-            is_entry(bool): True if the floor is an entry point of the building
-    '''
-
-    def __init__(self, simulation, floor_description):
-        self.simulation = simulation
-        for k, v in floor_description.items():
-            setattr(self, k, v)
-
 
 class Simulation:
 
     def __init__(self, description):
         self.description = self._time_compress(description)
         self.floors = self._init_floors()
+        self.entries = [f for f in self.floors if f.is_entry]
+        self.exits = [f for f in self.floors if f.is_exit]
         self.people = self._init_people()
         self.lifts = self._init_lifts()
         self.step_counter = 0
