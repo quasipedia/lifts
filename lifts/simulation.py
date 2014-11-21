@@ -53,7 +53,7 @@ class Person:
     def _arrived(self):
         '''Reach the destination.'''
         self.destination = None
-        self.info = ('%s has reached their destination.', self.pid)
+        log.info('%s has reached their destination.', self.pid)
 
     def _enter_building(self):
         '''Enter the building.'''
