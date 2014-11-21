@@ -25,19 +25,19 @@ class Lift:
         self.status = status
         self.floor = floor
         self.floor.lifts.append(self)
-        self.people = []  # Nobody is in the lift
+        self.people = set()  # Nobody is in the lift
         self.requested_destinations = set()  # No one has pressed a button
 
     def enter(self, person):
-        self.people.append(person)
+        self.people.add(person)
 
     def exit(self, person):
-        self.people.remove(person)
+        self.people.discard(person)
 
     def is_available(self):
         return (
             self.status != LiftStatus.moving and
-            len(self.people < self.capacity))
+            len(self.people) < self.capacity)
 
     def push_button(self, floor):
         self.requested_destinations.add(floor)

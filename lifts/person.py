@@ -37,14 +37,14 @@ class Person:
             self._reach_destination()
 
     def _reach_destination(self):
-        log.info('%s has reached their destination.', self.pid)
+        log.info('%s has reached destination.', self.pid)
         self.status = PersonStatus.done
         if self.lift:
             self.lift.exit(self)
             self.lift = None
 
     def _enter_lift(self, lift):
-        log.debug('%s has entered lift %s', self.pid, self.lift.name)
+        log.info('%s has entered lift %s', self.pid, lift.name)
         self.lift = lift
         self.lift.enter(self)
         self.lift.push_button(self.destination)
@@ -57,7 +57,8 @@ class Person:
             if options:
                 self._enter_lift(choice(options))
             # No lift, call one.
-            direction = Dirs.up if self.floor < self.destination else Dirs.down
+            go_up = self.floor.level < self.destination.level
+            direction = Dirs.up if go_up else Dirs.down
             self.floor.push_button(direction)
         elif self.lift.status != LiftStatus.moving:
             if self.destination == self.lift.floor:

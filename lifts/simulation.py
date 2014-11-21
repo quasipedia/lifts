@@ -78,7 +78,8 @@ class Simulation:
         '''Set and return the initial state for all lifts.'''
         ret = []
         for description in self.description['lifts']:
-            ret.append(Lift(self, description, LiftStatus.ready, 0))
+            floor = choice(self.floors)
+            ret.append(Lift(self, description, LiftStatus.ready, floor))
         return ret
 
     def listen(self, event_name, **kwargs):
@@ -89,7 +90,7 @@ class Simulation:
         '''Run a single step of the simulation.'''
         self.step_counter += 1
         elapsed = time() - self.start_time
-        log.debug('Step %d (%.3f seconds in)', self.step_counter, elapsed)
+        log.debug('Step %d (%.3f s)', self.step_counter, elapsed)
         for person in self.people:
             person.step(elapsed)
         intended_duration = self.start_time + GRANULARITY * self.step_counter
