@@ -1,7 +1,7 @@
 from random import choice
 
 from log import log
-from enums import PersonStatus, LiftStatus, Dirs
+from enums import PersonStatus, LiftStatus, Dir
 
 
 class Person:
@@ -26,6 +26,8 @@ class Person:
         self.destination = destination
         self.trig_time = trig_time
         self.lift = None  # There is no lift assiciated to this person
+        msg = 'initialised person "%s" [from %s to %s]'
+        log.debug(msg, self.pid, floor, destination)
 
     def _enter_building(self):
         '''Enter the building.'''
@@ -44,7 +46,7 @@ class Person:
             self.lift = None
 
     def _enter_lift(self, lift):
-        log.info('%s has entered lift %s', self.pid, lift.name)
+        log.info('%s has entered lift "%s"', self.pid, lift.name)
         self.lift = lift
         self.lift.enter(self)
         self.lift.push_button(self.destination)
@@ -57,9 +59,10 @@ class Person:
             if options:
                 self._enter_lift(choice(options))
             # No lift, call one.
-            go_up = self.floor.level < self.destination.level
-            direction = Dirs.up if go_up else Dirs.down
-            self.floor.push_button(direction)
+            else:
+                go_up = self.floor.level < self.destination.level
+                direction = Dir.up if go_up else Dir.down
+                self.floor.push_button(direction)
         elif self.lift.status != LiftStatus.moving:
             if self.destination == self.lift.floor:
                 self._reach_destination()

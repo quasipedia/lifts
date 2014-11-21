@@ -1,3 +1,7 @@
+from log import log
+from enums import Event
+
+
 class Floor:
 
     '''
@@ -13,10 +17,17 @@ class Floor:
 
     def __init__(self, simulation, floor_description):
         self.simulation = simulation
+        self.emit = self.simulation.listen
         for k, v in floor_description.items():
             setattr(self, k, v)
         self.lifts = []
         self.requested_directions = set()
+        log.debug('Initialised floor on level %s', self.level)
+
+    def __str__(self):
+        return 'Floor:{}'.format(self.level)
 
     def push_button(self, direction):
-        self.requested_directions.add(direction)
+        if direction not in self.requested_directions:
+            self.requested_directions.add(direction)
+            self.emit(self, Event.call_button, direction=direction)

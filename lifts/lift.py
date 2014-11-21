@@ -1,4 +1,5 @@
-from enums import LiftStatus
+from log import log
+from enums import LiftStatus, Event
 
 
 class Lift:
@@ -20,6 +21,7 @@ class Lift:
 
     def __init__(self, simulation, lift_description, status, floor):
         self.simulation = simulation
+        self.emit = self.simulation.listen
         for k, v in lift_description.items():
             setattr(self, k, v)
         self.status = status
@@ -27,6 +29,10 @@ class Lift:
         self.floor.lifts.append(self)
         self.people = set()  # Nobody is in the lift
         self.requested_destinations = set()  # No one has pressed a button
+        log.debug('initialised lift "%s" at level %s', self.name, floor.level)
+
+    def __str__(self):
+        return 'Lift:{}'.format(self.name)
 
     def enter(self, person):
         self.people.add(person)
@@ -40,4 +46,6 @@ class Lift:
             len(self.people) < self.capacity)
 
     def push_button(self, floor):
-        self.requested_destinations.add(floor)
+        if floor not in self.requested_destinations:
+            self.requested_destinations.add(floor)
+            self.emit(self, Event.floor_button, level=floor.level)
