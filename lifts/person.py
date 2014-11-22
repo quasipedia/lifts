@@ -26,27 +26,27 @@ class Person:
         self.destination = destination
         self.trig_time = trig_time
         self.lift = None  # There is no lift assiciated to this person
-        msg = 'initialised person "%s" [from %s to %s]'
+        msg = 'initialised person "{}" [from {} to {}]'
         log.debug(msg, self.pid, floor, destination)
 
     def _enter_building(self):
         '''Enter the building.'''
         self.status = PersonStatus.moving
         self.floor = choice(self.simulation.entries)
-        log.info('%s has entered the building on floor %s.',
+        log.info('{} has entered the building on floor {}.',
                  self.pid, self.floor.level)
         if self.floor == self.destination:
             self._reach_destination()
 
     def _reach_destination(self):
-        log.info('%s has reached destination.', self.pid)
+        log.info('{} has reached destination.', self.pid)
         self.status = PersonStatus.done
         if self.lift:
             self.lift.exit(self)
             self.lift = None
 
     def _enter_lift(self, lift):
-        log.info('%s has entered lift "%s"', self.pid, lift.name)
+        log.info('{} has entered lift "{}"', self.pid, lift.name)
         self.lift = lift
         self.lift.enter(self)
         self.lift.push_button(self.destination)

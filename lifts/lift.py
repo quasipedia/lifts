@@ -28,7 +28,7 @@ class Lift:
         self.floor.lifts.append(self)
         self.people = set()  # Nobody is in the lift
         self.requested_destinations = set()  # No one has pressed a button
-        log.debug('initialised lift "%s" at level %s', self.name, floor.level)
+        log.debug('initialised lift "{}" at level {}', self.name, floor.level)
 
     def __str__(self):
         return 'Lift:{}'.format(self.name)

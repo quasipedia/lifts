@@ -21,7 +21,7 @@ class Floor:
             setattr(self, k, v)
         self.lifts = []
         self.requested_directions = set()
-        log.debug('Initialised floor on level %s', self.level)
+        log.debug('Initialised floor on level {}', self.level)
 
     def __str__(self):
         return 'Floor:{}'.format(self.level)
