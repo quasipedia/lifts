@@ -100,7 +100,7 @@ class Simulation:
 
     def run(self):
         '''Run the simulation.'''
-        log.debug('Simulation started.')
+        log.info('Simulation started.')
         duration = self.description['simulation']['duration_min']
         self.start_time = time()
         hard_limit = self.start_time + duration + GRACE_PERIOD
@@ -111,7 +111,8 @@ class Simulation:
                 log.error('Hard time limit hit')
                 break
             self.step()
-        log.debug('Simulation ended.')
+        elapsed = time() - self.start_time
+        log.info('Simulation ended, total duration: %.3f seconds', elapsed)
 
 
 def main():
