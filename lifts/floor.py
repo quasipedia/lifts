@@ -17,7 +17,6 @@ class Floor:
 
     def __init__(self, simulation, floor_description):
         self.simulation = simulation
-        self.emit = self.simulation.listen
         for k, v in floor_description.items():
             setattr(self, k, v)
         self.lifts = []
@@ -30,4 +29,4 @@ class Floor:
     def push_button(self, direction):
         if direction not in self.requested_directions:
             self.requested_directions.add(direction)
-            self.emit(self, Event.call_button, direction=direction)
+            self.simulation.route(self, Event.call_button, direction=direction)

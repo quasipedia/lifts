@@ -21,7 +21,6 @@ class Lift:
 
     def __init__(self, simulation, lift_description, status, floor):
         self.simulation = simulation
-        self.emit = self.simulation.listen
         for k, v in lift_description.items():
             setattr(self, k, v)
         self.status = status
@@ -48,4 +47,7 @@ class Lift:
     def push_button(self, floor):
         if floor not in self.requested_destinations:
             self.requested_destinations.add(floor)
-            self.emit(self, Event.floor_button, level=floor.level)
+            self.simulation.route(self, Event.floor_button, level=floor.level)
+
+    def process(self, command, entity, **kwargs):
+        log.debug('Lift "{}"" received command "{}"', self.name, command)
