@@ -50,7 +50,7 @@ class FileInterface:
             bits[0] = STRING_TO_COMMAND[bits[0]]
         except KeyError:
             msg = 'Unknown command "{}" in line "{}"'.format(bits[0], line)
-            self.send_message(Message.error, msg=msg)
+            self.send_message(Message.error, msg)
             return None
         if bits[2] is not None:
             try:
@@ -58,7 +58,7 @@ class FileInterface:
             except ValueError:
                 msg = 'Cannot understand floor "{}" in line "{}"'.format(
                     bits[2], line)
-                self.send_message(Message.error, msg=msg)
+                self.send_message(Message.error, msg)
                 return None
         return bits[:3]
 
@@ -74,11 +74,12 @@ class FileInterface:
                 break
             yield payload
 
-    def send_message(self, message, entity=None, **kwargs):
+    def send_message(self, message, entity, *args):
         bits = [MESSAGE_TO_STRING[message]]
-        for key in ('msg', 'button', 'floor'):
-            bits.append(kwargs.get(key, ''))
-        self.write(' '.join(bits))
+        if entity:
+            bits.append(entity)
+        bits += args
+        self.write(' '.join(map(str, bits)))
 
     def cleanup(self):
         for fname in (self.in_name, self.out_name):

@@ -1,7 +1,7 @@
 from enum import Enum
 
-LiftStatus = Enum('LiftStatus', 'moving loading ready')
-PersonStatus = Enum('PersonStatus', 'busy moving done')
+LiftStatus = Enum('LiftStatus', 'moving open closed')
+PersonStatus = Enum('PersonStatus', 'idle moving done')
 Dir = Enum('Dirs', 'up down')
 Event = Enum('Event', 'call_button floor_button')
 Command = Enum('Command', 'move open close')

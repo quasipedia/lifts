@@ -71,7 +71,7 @@ class Person:
         '''Perform the next action.'''
         if self.status == PersonStatus.done:
             return
-        if self.status == PersonStatus.busy:
+        if self.status == PersonStatus.idle:
             if elapsed > self.trig_time:
                 self._enter_building()
         # Entering the building needs to fall through the following case too

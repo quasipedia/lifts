@@ -1,5 +1,5 @@
 from log import log
-from enums import LiftStatus, Event, Command
+from enums import LiftStatus, Event, Command, Message
 
 
 class Lift:
@@ -24,6 +24,7 @@ class Lift:
         for k, v in lift_description.items():
             setattr(self, k, v)
         self.status = status
+        self.moving_direction = None
         self.floor = floor
         self.floor.lifts.append(self)
         self.people = set()  # Nobody is in the lift
@@ -41,13 +42,34 @@ class Lift:
 
     def is_available(self):
         return (
-            self.status != LiftStatus.moving and
+            self.status == LiftStatus.open and
             len(self.people) < self.capacity)
 
     def push_button(self, floor):
         if floor not in self.requested_destinations:
             self.requested_destinations.add(floor)
-            self.simulation.route(Event.floor_button, self, level=floor.level)
+            self.simulation.route(Event.floor_button, self, floor.level)
 
-    def process(self, command, entity, **kwargs):
+    def move(self, command, entity, direction):
         log.debug('Lift "{}"" received command "{}"', self.name, command)
+        if command == Command.open:
+            if self.status != LiftStatus.closed:
+                msg = 'Cannot open doors while moving!'
+                self.simulation.route(Message.error, self, msg)
+            else:
+                self.status = LiftStatus.open
+        elif command == Command.close:
+            if self.status != LiftStatus.open:
+                msg = 'The doors are already closed!'
+                self.simulation.route(Message.error, self, msg)
+            else:
+                self.status = LiftStatus.closed
+        elif command == Command.move:
+            if self.status != LiftStatus.closed:
+                msg = 'Cannot move a lift while doors are open!'
+                self.simulation.route(Message.error, self, msg)
+            else:
+                self.status = LiftStatus.moving
+                self.moving_direction = direction
+
+
