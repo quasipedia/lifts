@@ -3,7 +3,7 @@ The interface of lifts.
 '''
 import os
 
-from enums import Messages, Commands
+from enums import Message, Command
 
 COMMAND_STRINGS = (
     'MOVE',
@@ -17,8 +17,8 @@ MESSAGE_STRINGS = (
     'FLOOR_REQUESTED',
     'ERROR',
 )
-MESSAGE_TO_STRING = dict(zip(Messages, MESSAGE_STRINGS))
-STRING_TO_COMMAND = dict(zip(COMMAND_STRINGS, Commands))
+MESSAGE_TO_STRING = dict(zip(Message, MESSAGE_STRINGS))
+STRING_TO_COMMAND = dict(zip(COMMAND_STRINGS, Command))
 
 
 class FileInterface:
@@ -50,7 +50,7 @@ class FileInterface:
             bits[0] = STRING_TO_COMMAND[bits[0]]
         except KeyError:
             msg = 'Unknown command "{}" in line "{}"'.format(bits[0], line)
-            self.send_message(Messages.error, msg=msg)
+            self.send_message(Message.error, msg=msg)
             return None
         if bits[2] is not None:
             try:
@@ -58,7 +58,7 @@ class FileInterface:
             except ValueError:
                 msg = 'Cannot understand floor "{}" in line "{}"'.format(
                     bits[2], line)
-                self.send_message(Messages.error, msg=msg)
+                self.send_message(Message.error, msg=msg)
                 return None
         return bits[:3]
 

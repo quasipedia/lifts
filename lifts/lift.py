@@ -1,5 +1,5 @@
 from log import log
-from enums import LiftStatus, Event
+from enums import LiftStatus, Event, Command
 
 
 class Lift:
@@ -47,7 +47,7 @@ class Lift:
     def push_button(self, floor):
         if floor not in self.requested_destinations:
             self.requested_destinations.add(floor)
-            self.simulation.route(self, Event.floor_button, level=floor.level)
+            self.simulation.route(Event.floor_button, self, level=floor.level)
 
     def process(self, command, entity, **kwargs):
         log.debug('Lift "{}"" received command "{}"', self.name, command)
