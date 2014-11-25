@@ -1,1 +1,1 @@
-python -m nose --rednose --verbose --detailed-errors --with-coverage --cover-erase --cover-package lifts
+python -m nose --rednose --verbose --with-coverage --cover-erase --cover-package lifts

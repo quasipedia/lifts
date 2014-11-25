@@ -14,7 +14,8 @@ class EntityRegistry:
 
     @classmethod
     def remove(cls, instance):
-        cls.__instances[instance.__class__].remove(instance)
+        for ref in weakref.getweakrefs(instance):
+            cls.__instances[instance.__class__].discard(ref)
 
     @classmethod
     def instances(cls, class_):
@@ -23,7 +24,11 @@ class EntityRegistry:
 
     @classmethod
     def classes(cls):
-        yield from (k for k in self.__instances)
+        yield from (k for k in cls.__instances)
+
+    @classmethod
+    def reset(cls):
+        cls.__instances = defaultdict(set)
 
 
 class SimObject:
@@ -32,15 +37,13 @@ class SimObject:
 
     __refs__ = defaultdict(list)
 
-    def __init__(self, simulation):
-        self.simulation = simulation
+    def __init__(self):
         self.listening_entities = set()
         EntityRegistry.add(self)
 
     @asyncio.coroutine
     def perform_step(self):
-        while True:
-            yield from self.step()
+        yield from self.step()
 
     def listen(self, entity):
         '''Listen to the events emitted by an entity.'''
