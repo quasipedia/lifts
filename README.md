@@ -15,8 +15,21 @@ The game uses two files (one for input and one for output) to interact with AI
 clients, whose task is to control the lifts in a sensible way.
 
 
-File interface
---------------
+AI clients
+----------
+
+Clients executable must accept two commandline parameters:
+
+    my-awesome-AI-client server-to-client client-to-server
+
+- `server-to-client`: The file where the simulation will write its output (see
+  "Outputs" section below)
+- `client-to-server`: The file where the AI client will write the commands for
+  the simulation (see "Inputs" section below)
+
+
+Interface
+---------
 
 The protocol is text based.  Each line represent a message.
 
