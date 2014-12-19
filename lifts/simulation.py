@@ -17,6 +17,7 @@ from enums import LiftStatus, PersonStatus, Command, Message
 
 
 DEFAULT = {
+    'id': 'default',
     'building': [
         {'level': 3, 'is_exit': False, 'is_entry': False},
         {'level': 2, 'is_exit': False, 'is_entry': False},
@@ -24,7 +25,8 @@ DEFAULT = {
         {'level': 0, 'is_exit': True, 'is_entry': True},
     ],
     'lifts': [
-        {'name': 'main', 'capacity': 4, 'pass_sec': 3, 'accel_sec': 6},
+        {'name': 'main', 'capacity': 4, 'directional': True,
+         'pass_sec': 3, 'accel_sec': 6},
     ],
     'simulation': {
         'duration_min': 5,
@@ -33,7 +35,8 @@ DEFAULT = {
 }
 TIME_COMPRESSION = 1  # 360 --> 1h = 10sec
 GRANULARITY = 1  # in real seconds
-GRACE_PERIOD = 60  # in seconds
+POST_END_GRACE_PERIOD = 60  # in seconds
+CLIENT_BOOT_GRACE_PERIOD = 10  # in seconds
 
 
 class Simulation:
@@ -100,6 +103,7 @@ class Simulation:
     def step(self):
         '''Run a single step of the simulation.'''
         self.step_counter += 1
+        self.route(Message.turn, None, self.step_counter)
         elapsed = time() - self.start_time
         log.debug('Step {} ({:.3f} s)', self.step_counter, elapsed)
         for command, entity, floor in self.interface.get_commands():
@@ -110,20 +114,38 @@ class Simulation:
         sleep_duration = max(intended_duration - time(), 0)
         sleep(sleep_duration)
 
+    def check_client_is_ready(self):
+        '''Return True if the client AI is ready to play.'''
+        start_waiting_time = time()
+        while time() < start_waiting_time + CLIENT_BOOT_GRACE_PERIOD:
+            if False:  # Change with real test
+                yield True
+            yield False
+
     def run(self):
         '''Run the simulation.'''
-        log.info('Simulation started.')
-        self.route(Message.started)
+        log.debug('Waiting for the AI client to signal their readiness.')
+        checker = self.check_client_is_ready()
+        try:
+            while not next(checker):
+                sleep(0.5)
+        except StopIteration:
+            log.critical('The client never sent the READY signal.')
+            exit(1)
+        log.info('Simulation started')
+        # Set time limits and utility functions
         duration = self.description['simulation']['duration_min']
         self.start_time = time()
-        hard_limit = self.start_time + duration + GRACE_PERIOD
+        hard_limit = self.start_time + duration + POST_END_GRACE_PERIOD
         overdue = lambda: time() > hard_limit
         done = lambda: all(p.status == PersonStatus.done for p in self.people)
+        # Run the main loop
         while not done():
             if overdue():
                 log.error('Hard time limit hit')
                 break
             self.step()
+        # Post-simulation operations
         elapsed = time() - self.start_time
         self.route(Message.ended)
         log.info('Simulation ended, total duration: {:.3f} seconds', elapsed)

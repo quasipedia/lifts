@@ -11,11 +11,16 @@ COMMAND_STRINGS = (
     'CLOSE',
 )
 MESSAGE_STRINGS = (
-    'STARTED',
-    'ENDED',
-    'LIFT_CALLED',
-    'FLOOR_REQUESTED',
+    'WORLD',
+    'TURN',
+    'READY',
+    'LIFT_CALL',
+    'FLOOR_REQUEST',
+    'TRANSIT',
+    'STOP',
     'ERROR',
+    'END',
+    'STATS',
 )
 MESSAGE_TO_STRING = dict(zip(Message, MESSAGE_STRINGS))
 STRING_TO_COMMAND = dict(zip(COMMAND_STRINGS, Command))

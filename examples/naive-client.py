@@ -19,38 +19,48 @@ class Client:
     def send_command(self, *args):
         args[0] = args[0].upper()  # the command
         args = map(str, args[1:])  # the command payload
-        print(' '.join(args), file=self.commands)
+        print(' '.join(args), file=self.commands, flush=True)
 
     def process_world(self, message):
-        '''Process the WORLD command.'''
+        '''Process the WORLD message.'''
         world = json.loads(message[1])
         self.lift_ids = [l['name'] for l in world['lifts']]
 
-    def process_started(self, message):
-        '''Process the STARTED command.'''
+    def process_turn(self, message):
+        '''Process the TURN message.'''
+        send_command('ECHO', message)
+
+    def process_ready(self, message):
+        '''Process the READY message.'''
+        send_command('ECHO', message)
+
+    def process_lift_called(self, message):
+        '''Process the LIFT_CALLED message.'''
+        send_command('ECHO', message)
+
+    def process_floor_requested(self, message):
+        '''Process the FLOOR_REQUESTED message.'''
+        send_command('ECHO', message)
+
+    def process_transit(self, message):
+        '''Process the TRANSIT message.'''
+        send_command('ECHO', message)
+
+    def process_reached(self, message):
+        '''Process the REACHED message.'''
+        send_command('ECHO', message)
+
+    def process_error(self, message):
+        '''Process the ERROR message.'''
         pass
 
     def process_ended(self, message):
-        '''Process the ENDED command.'''
+        '''Process the ENDED message.'''
         self.simulation_is_over = True
 
-    def process_lift_called(self, message):
-        '''Process the LIFT_CALLED command.'''
-        floor = int(message[1])
-        for lift_id in self.lift_ids:
-            send_command('move', lift_id, floor)
-
-    def process_floor_requested(self, message):
-        '''Process the FLOOR_REQUESTED command.'''
-        raise NotImplementedError
-
-    def process_error(self, message):
-        '''Process the ERROR command.'''
-        raise NotImplementedError
-
     def process_stats(self, message):
-        '''Process the STATS command.'''
-        raise NotImplementedError
+        '''Process the STATS message.'''
+        send_command('ECHO', message)
 
     def process_message(self):
         '''Retrieve and process a message.'''

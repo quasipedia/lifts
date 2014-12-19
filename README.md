@@ -41,15 +41,20 @@ Possible outputs from the engine:
 - **`WORLD <object>`** - Description of the simulation's world, expressed as a
   JSON-encoded object (see below for details).  This message is generated only
   once, before the simulation has started.
-- `STARTED` - The simulation has started.
-- **`LIFT_CALLED <floor-number> <direction>`** - A lift has been called at
-  a given floor number to go `UP`, `DOWN` or `SOMEWHERE` (possible values for
+- **`TURN <turn-number>`** - Turn number `<turn-number>` has started.
+- **`READY`** - The output for the turn is done, waiting for the client input.
+- **`LIFT_CALL <floor-number> <direction>`** - A lift has been called at
+  a given floor number to go `UP`, `DOWN` or `-` (possible values for
   `<direction>`)
-- **`FLOOR_REQUESTED <lift-id> <floor-number>`** - Somebody in lift `<lift-id>`
+- **`FLOOR_REQUEST <lift-id> <floor-number>`** - Somebody in lift `<lift-id>`
   has pressed the floor button `<floor-number>`
+- **`TRANSIT <lift-id> <floor-number>`** - A lift is transiting through a given
+  floor (see why this is useful to know in the "Note" to "Nin-executable
+  commands" below)
+- **`STOP <lift-id> <floor-number>`** - A lift has stopped at a given floor.
 - **`ERROR <text>`** - The command `<command>` has generated an error.
   `<text>` is a multi-word explanation of what the error is.
-- **`ENDED`** - The simulation has ended.
+- **`END`** - The simulation has ended.
 - **`STATS <object>`** - The simulation statistics, expressed as a JSON-encoded
   object (see below for details).  This message is generated only once, after
   the simulation has ended.
@@ -59,9 +64,15 @@ Possible outputs from the engine:
 
 Valid input that a client can generate for the engine:
 
+- **`READY`** - Inform the simulation engine that the client has bootstrapped
+  and online.
 - **`MOVE <lift-id> <floor-number>`** - Instruct a lift to move to a given
   floor.
-- **`OPEN <lift-id>`** - Open the doors of a lift.
+- **`OPEN <lift-id> <direction>`** - Open the doors of a lift, signal to people
+  on the floor where the lift will move next [`UP`, `DOWN`, `-`].  As in real
+  life, indicating the direction the lift will move next will make only people
+  going in that direction to get onboard.  To update the `<direction>` of a
+  lift with its door already open, just issue a new `OPEN` command.
 - **`CLOSE <lift-id>`** - Close the doors of a lift.
 
 
