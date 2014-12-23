@@ -42,9 +42,9 @@ class Person(LiftsActor):
             return True
         if compass != lift.direction:
             return True
-        if compass is Direction.down and lift.is_bottom:
+        if compass is Direction.down and lift.at_bottom:
             return True
-        if compass is Direction.up and lift.is_top:
+        if compass is Direction.up and lift.at_top:
             return True
         return False
 
@@ -55,17 +55,17 @@ class Person(LiftsActor):
         return False
 
     @on('lift.open')
-    def on_lift_open(self, message, lift, floor, direction):
+    def on_lift_open(self, message, lift):
         '''Take action if a lift opens neraby.'''
         if self.location == lift:
             if self._should_get_off(lift):
                 self.emit('person.lift.off', lift)
-                self.location = floor
-            if floor == self.destination():
+                self.location = lift.location
+            if lift.location == self.destination:
                 self.arrive()
             else:
                 self.call_lift()
-        if self.location == floor:
+        if self.location == lift.location:
             if self._should_get_on(lift):
                 self.emit('person.lift.on', lift)
 
