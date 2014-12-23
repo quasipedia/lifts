@@ -1,7 +1,12 @@
-from simpleactors import on, Actor, INITIATE
+from simpleactors import on, INITIATE
 
-from log import log
-from enums import LiftStatus, Event, Command, Message
+from .common import (
+    log,
+    LiftsActor,
+    LiftStatus,
+    Event,
+    Command,
+    Message)
 
 
 class Lift:
@@ -75,7 +80,7 @@ class Lift:
                 self.moving_direction = direction
 
 
-class Lift(Actor):
+class Lift(LiftsActor):
 
     @on(INITIATE)
     def init(self):

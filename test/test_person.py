@@ -1,5 +1,5 @@
 '''
-Test suite for the Person class.
+Test suite for the person module.
 '''
 
 import unittest
@@ -32,6 +32,8 @@ class MockLift:
 
 
 class TestPerson(unittest.TestCase):
+
+    '''Tests for the Person class.'''
 
     def setUp(self):
         self.ground_floor = MockFloor(0)
