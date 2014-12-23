@@ -45,11 +45,21 @@ class TestPerson(unittest.TestCase):
     def tearDown(self):
         sa.reset()
 
+    def test_string(self):
+        '''The string representation of a Person is its pid.'''
+        self.assertEqual('{}'.format(self.person_at_floor), 'Foo')
+
     @mock.patch.object(Person, 'call_lift')
     def test_new_call(self, mock_call):
         '''A freshly spawn person will call a lift.'''
         Person('Spam', self.ground_floor, self.top_floor)
         mock_call.assert_called_once_with()
+
+    @mock.patch.object(Person, 'arrive')
+    def test_spawn_at_destination(self, mock_arrive):
+        '''A person spawn at destination, immediately arrives.'''
+        Person('Spam', self.ground_floor, self.ground_floor)
+        mock_arrive.assert_called_once_with()
 
     def test_no_in_when_full(self):
         '''A person does not step in a full lift.'''
@@ -105,6 +115,14 @@ class TestPerson(unittest.TestCase):
             expected = ('person.lift.off', self.lift)
             actual = mock_emit.mock_calls[0][1]
             self.assertEqual(expected, actual)
+
+    def test_no_out_intermediate_stop(self):
+        '''A person does not step out at an intermediate stop.'''
+        self.lift.location = MockFloor(5)
+        with mock.patch.object(self.person_on_lift, 'emit') as mock_emit:
+            self.person_on_lift.on_lift_open('lift.open', self.lift)
+            print(mock_emit.mock_calls)
+            self.assertFalse(mock_emit.called)
 
     def test_out_no_more_down(self):
         '''A person step out of a lift at bottom limit to go further down.'''
