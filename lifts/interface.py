@@ -3,6 +3,8 @@ The interface of lifts.
 '''
 import os
 
+from simpleactors import on, Actor, INITIATE
+
 from enums import Message, Command
 
 COMMAND_STRINGS = (
@@ -92,3 +94,10 @@ class FileInterface:
                 os.remove(fname)
             except FileNotFoundError:
                 pass
+
+
+class FileInterface(Actor):
+
+    @on(INITIATE)
+    def init(self):
+        pass

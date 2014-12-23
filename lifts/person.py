@@ -1,79 +1,77 @@
-from random import choice
+from simpleactors import on, KILL
 
-from log import log
-from enums import PersonStatus, LiftStatus, Dir
+from .common import log, Direction, LiftsActor
 
 
-class Person:
+class Person(LiftsActor):
 
+    '''A person in the simulation.
+
+    A person is "moving" as soon as it enters the simulation.  The object gets
+    destroyed as soon as the person reaches it's destination
+
+    Aguments:
+        pid: a human-friendly identifier for the person (string)
+        location: the current position of the person (normally a floor, but
+            could as well be a lift, although it makes no sense)
+        destination: the final destination of the person (floor)
     '''
-    A person in the simulation.
 
-    Args:
-        simulation (Simulation): the simulation in which the person lives
-        pid (str): a unique id for the person
-        status (PersonStatus): the initial state of the person
-        floor (Floor or None): floor or None [not in the building]
-        destination (Floor): floor or None [not in the building]
-        trig_time: time at which to trig the commute
-    '''
-
-    def __init__(self, simulation, pid, status, floor, destination, trig_time):
-        self.simulation = simulation
+    def __init__(self, pid, location, destination):
+        super().__init__()
         self.pid = pid
-        self.status = status
-        self.floor = floor
+        self.location = location
         self.destination = destination
-        self.trig_time = trig_time
-        self.lift = None  # There is no lift assiciated to this person
-        msg = 'initialised person "{}" [from {} to {}]'
-        log.debug(msg, self.pid, floor, destination)
+        if self.location == self.destination:
+            self.arrive()
+        else:
+            self.call_lift()
 
-    def _enter_building(self):
-        '''Enter the building.'''
-        self.status = PersonStatus.moving
-        self.floor = choice(self.simulation.entries)
-        log.info('{} has entered the building on floor {}.',
-                 self.pid, self.floor.level)
-        if self.floor == self.destination:
-            self._reach_destination()
+    def __str__(self):
+        return self.pid
 
-    def _reach_destination(self):
-        log.info('{} has reached destination.', self.pid)
-        self.status = PersonStatus.done
-        if self.lift:
-            self.lift.exit(self)
-            self.lift = None
+    @property
+    def numeric_location(self):
+        '''Return the number of the floor the person is at.'''
+        return self.location.numeric_location
 
-    def _enter_lift(self, lift):
-        log.info('{} has entered lift "{}"', self.pid, lift.name)
-        self.lift = lift
-        self.lift.enter(self)
-        self.lift.push_button(self.destination)
+    def _should_get_off(self, lift):
+        '''Return True if the most sensible thing to do is get off the lift.'''
+        compass = self.compass  # Save recomputation for each test
+        if compass is Direction.none:
+            return True
+        if compass != lift.direction:
+            return True
+        if compass is Direction.down and lift.is_bottom:
+            return True
+        if compass is Direction.up and lift.is_top:
+            return True
+        return False
 
-    def _move(self):
-        # The person is waiting for a lift
-        if self.lift is None:
-            options = [l for l in self.floor.lifts if l.is_available()]
-            # A lift is available!
-            if options:
-                self._enter_lift(choice(options))
-            # No lift, call one.
+    def _should_get_on(self, lift):
+        '''Return True if the most sensible thing to do is get on the lift.'''
+        if not lift.full and lift.direction in (self.compass, Direction.none):
+            return True
+        return False
+
+    @on('lift.open')
+    def on_lift_open(self, message, lift, floor, direction):
+        '''Take action if a lift opens neraby.'''
+        if self.location == lift:
+            if self._should_get_off(lift):
+                self.emit('person.lift.off', lift)
+                self.location = floor
+            if floor == self.destination():
+                self.arrive()
             else:
-                go_up = self.floor.level < self.destination.level
-                direction = Dir.up if go_up else Dir.down
-                self.floor.push_button(direction)
-        elif self.lift.status != LiftStatus.moving:
-            if self.destination == self.lift.floor:
-                self._reach_destination()
+                self.call_lift()
+        if self.location == floor:
+            if self._should_get_on(lift):
+                self.emit('person.lift.on', lift)
 
-    def step(self, elapsed):
-        '''Perform the next action.'''
-        if self.status == PersonStatus.done:
-            return
-        if self.status == PersonStatus.idle:
-            if elapsed > self.trig_time:
-                self._enter_building()
-        # Entering the building needs to fall through the following case too
-        if self.status == PersonStatus.moving:
-            self._move()
+    def call_lift(self):
+        self.emit('person.lift.call', direction=self.compass)
+
+    def arrive(self):
+        self.emit('person.arrived')
+        self.emit(KILL, self)

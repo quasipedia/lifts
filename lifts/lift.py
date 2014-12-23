@@ -1,3 +1,5 @@
+from simpleactors import on, Actor, INITIATE
+
 from log import log
 from enums import LiftStatus, Event, Command, Message
 
@@ -73,3 +75,14 @@ class Lift:
                 self.moving_direction = direction
 
 
+class Lift(Actor):
+
+    @on(INITIATE)
+    def init(self):
+        # Save initial state, emit initial lift.open
+        pass
+
+    @on('tick')
+    def move(self):
+        # Advance in the planned actions, emit transit/open/close as necessary
+        pass

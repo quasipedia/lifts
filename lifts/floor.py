@@ -1,3 +1,5 @@
+from simpleactors import on, Actor, INITIATE
+
 from log import log
 from enums import Event
 
@@ -30,3 +32,23 @@ class Floor:
         if direction not in self.requested_directions:
             self.requested_directions.add(direction)
             self.simulation.route(self, Event.call_button, direction=direction)
+
+class Floor(Actor):
+
+    @on(INITIATE)
+    def init(self):
+        # Save initial button state
+        pass
+
+    @on('lift.open')
+    def lift_has_opened(self):
+        # If not at floor, skip
+        # Button reset for lift direction
+        # Prevent lock button for that direction
+        pass
+
+    @on('lift.close')
+    def lift_has_closed(self):
+        # If not at floor, skip
+        # Unlock button for direction
+        pass

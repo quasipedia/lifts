@@ -3,6 +3,18 @@ Lifts
 
 A lift simulator (AI game)
 
+<!-- MarkdownTOC -->
+
+- Quick overview
+- AI clients
+- Interface
+- Non-executable commands
+- World specifications
+- Statistic specifications
+- Awards and badges
+
+<!-- /MarkdownTOC -->
+
 
 Quick overview
 --------------

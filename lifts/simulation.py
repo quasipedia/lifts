@@ -6,7 +6,8 @@ from copy import deepcopy
 from time import time, sleep
 from random import choice, gauss
 
-#import toml
+# import toml
+from simpleactors import Director, on, INITIATE
 
 from log import log
 from person import Person
@@ -39,9 +40,10 @@ POST_END_GRACE_PERIOD = 60  # in seconds
 CLIENT_BOOT_GRACE_PERIOD = 10  # in seconds
 
 
-class Simulation:
+class Simulation(Director):
 
-    def __init__(self, description, interface):
+    @on(INITIATE)
+    def init(self, description, interface):
         self.description = self._time_compress(description)
         self.interface = interface
         self.step_counter = 0
