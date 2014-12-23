@@ -53,7 +53,7 @@ class Lift(LiftsActor):
     def at_top(self):
         '''Return True with lift at top of its possible excursion.'''
         return self.location.numeric_location == self.top_floor_number
-    
+
     @property
     def at_bottom(self):
         '''Return True with lift at bottom of its possible excursion.'''
@@ -68,7 +68,7 @@ class Lift(LiftsActor):
     def is_moving(self):
         '''Return True if the lift is not still.'''
         return self.direction is not Direction.none
-    
+
     @on('turn.start')
     def turn_action(self, duration):
         '''Perform all actions for a turn of `duration` seconds.'''

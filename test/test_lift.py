@@ -11,9 +11,27 @@ from lifts.common import Direction
 from lifts.lift import Lift
 
 
+class MockFloor:
+
+    def __init__(self, numeric_location):
+        self.numeric_location = numeric_location
+
+
 class TestLift(unittest.TestCase):
 
     '''Tests for the Lift class.'''
+
+    def setUp(self):
+        description = {
+            'lid': 'SpamLift',
+            'capacity': 2,
+            'transit_time': 3,
+            'accel_time': 6,
+            'bottom_floor_number': 0,
+            'top_floor_number': 0,
+        }
+        self.ground_floor = MockFloor(0)
+        self.lift = Lift(description, self.ground_floor)
 
     def tearDown(self):
         sa.reset()
