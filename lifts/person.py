@@ -73,8 +73,10 @@ class Person(LiftsActor):
                 self.emit('person.lift.on', lift)
 
     def call_lift(self):
+        '''Call a lift at the present floor.'''
         self.emit('person.lift.call', direction=self.compass)
 
     def arrive(self):
+        '''Update status upon arrival.'''
         self.emit('person.arrived')
         self.emit(KILL, self)

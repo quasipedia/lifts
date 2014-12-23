@@ -1,4 +1,4 @@
-from simpleactors import on, INITIATE
+from simpleactors import on
 
 from .common import (
     log,
@@ -8,77 +8,6 @@ from .common import (
     Command,
     Message,
     Direction)
-
-
-class Lift:
-
-    '''
-    A lift in the simulation.
-
-    Args:
-        simulation (Simulation): the simulation in which the lift exists
-        lift_description (dict): this is a dictionary that contains:
-            name: the name of the lift
-            capacity: the maximum capacity
-            pass_sec: the time it takes the lift to transit through a floor
-            accel_sec: the time it takes to start/stop at a floor
-            load_sec: the time the doors stay open for
-        status (LiftStatus): the initial state of the lift
-        floor (Floor): floor where the lift currently is
-    '''
-
-    def __init__(self, simulation, lift_description, status, floor):
-        self.simulation = simulation
-        for k, v in lift_description.items():
-            setattr(self, k, v)
-        self.status = status
-        self.moving_direction = None
-        self.floor = floor
-        self.floor.lifts.append(self)
-        self.people = set()  # Nobody is in the lift
-        self.requested_destinations = set()  # No one has pressed a button
-        log.debug('initialised lift "{}" at level {}', self.name, floor.level)
-
-    def __str__(self):
-        return 'Lift:{}'.format(self.name)
-
-    def enter(self, person):
-        self.people.add(person)
-
-    def exit(self, person):
-        self.people.discard(person)
-
-    def is_available(self):
-        return (
-            self.status == LiftStatus.open and
-            len(self.people) < self.capacity)
-
-    def push_button(self, floor):
-        if floor not in self.requested_destinations:
-            self.requested_destinations.add(floor)
-            self.simulation.route(Event.floor_button, self, floor.level)
-
-    def move(self, command, entity, direction):
-        log.debug('Lift "{}"" received command "{}"', self.name, command)
-        if command == Command.open:
-            if self.status != LiftStatus.closed:
-                msg = 'Cannot open doors while moving!'
-                self.simulation.route(Message.error, self, msg)
-            else:
-                self.status = LiftStatus.open
-        elif command == Command.close:
-            if self.status != LiftStatus.open:
-                msg = 'The doors are already closed!'
-                self.simulation.route(Message.error, self, msg)
-            else:
-                self.status = LiftStatus.closed
-        elif command == Command.move:
-            if self.status != LiftStatus.closed:
-                msg = 'Cannot move a lift while doors are open!'
-                self.simulation.route(Message.error, self, msg)
-            else:
-                self.status = LiftStatus.moving
-                self.moving_direction = direction
 
 
 class Lift(LiftsActor):
@@ -103,6 +32,8 @@ class Lift(LiftsActor):
         self.capacity = description['capacity']
         self.transit_time = description['transit_time']
         self.accel_time = description['accel_time']
+        self.bottom_floor_number = description['bottom_floor_number']
+        self.top_floor_number = description['top_floor_number']
         # Lift status
         self.location = location
         self.direction = Direction.none
@@ -115,15 +46,37 @@ class Lift(LiftsActor):
 
     @property
     def numeric_location(self):
+        '''Return the number of the floor the lift is at.'''
         return self.location.numeric_location
 
+    @property
+    def at_top(self):
+        '''Return True with lift at top of its possible excursion.'''
+        return self.location.numeric_location == self.top_floor_number
+    
+    @property
+    def at_bottom(self):
+        '''Return True with lift at bottom of its possible excursion.'''
+        return self.location.numeric_location == self.bottom_floor_number
+
+    @property
+    def full(self):
+        '''Ruturn True if the lift has reached maximum capacity.'''
+        return len(self.passengers) == self.capacity
+
+    @property
+    def is_moving(self):
+        '''Return True if the lift is not still.'''
+        return self.direction is not Direction.none
+    
     @on('turn.start')
-    def move(self, duration):
+    def turn_action(self, duration):
         '''Perform all actions for a turn of `duration` seconds.'''
         pass
 
     @on('command.goto')
-    def set_destination(self, lift, destination):
+    def goto(self, lift, destination):
+        '''Process the `goto` command.'''
         if self is not lift:
             return
         self.destination = destination
@@ -132,9 +85,10 @@ class Lift(LiftsActor):
 
     @on('command.open')
     def open_doors(self, lift):
+        '''Process the `open` command.'''
         if self is not lift:
             return
-        if self.direction is not Direction.none:
+        if self.is_moving:
             self.emit('error.open.still_moving')
             return
         if self.open_doors is True:
@@ -145,6 +99,7 @@ class Lift(LiftsActor):
 
     @on('command.close')
     def close_doors(self, lift):
+        '''Process the `close doors` command.'''
         if self is not lift:
             return
         if self.open_doors is False:
@@ -154,5 +109,6 @@ class Lift(LiftsActor):
         self.emit('lift.close')
 
     def arrive(self):
+        '''Update lift status on arrival to destination.'''
         self.direction = Direction.none
         # set top/bottom flags
