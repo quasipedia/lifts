@@ -6,7 +6,8 @@ from .common import (
     LiftStatus,
     Event,
     Command,
-    Message)
+    Message,
+    Direction)
 
 
 class Lift:
@@ -95,7 +96,7 @@ class Lift(LiftsActor):
         floor (Floor): floor where the lift currently is
     '''
 
-    def __init__(self, description, location):
+    def __init__(self, description, location, open_doors=False):
         super().__init__()
         # Lift description
         self.lid = description['lid']
@@ -105,7 +106,9 @@ class Lift(LiftsActor):
         # Lift status
         self.location = location
         self.direction = Direction.none
+        self.destination = None
         self.passengers = set()
+        self.open_doors = open_doors
 
     def __str__(self):
         return self.lid
@@ -118,3 +121,38 @@ class Lift(LiftsActor):
     def move(self, duration):
         '''Perform all actions for a turn of `duration` seconds.'''
         pass
+
+    @on('command.goto')
+    def set_destination(self, lift, destination):
+        if self is not lift:
+            return
+        self.destination = destination
+        # Add top/bottom logic
+        # Add direction
+
+    @on('command.open')
+    def open_doors(self, lift):
+        if self is not lift:
+            return
+        if self.direction is not Direction.none:
+            self.emit('error.open.still_moving')
+            return
+        if self.open_doors is True:
+            self.emit('error.open.already_open')
+            return
+        self.open_doors = True
+        self.emit('lift.open')
+
+    @on('command.close')
+    def close_doors(self, lift):
+        if self is not lift:
+            return
+        if self.open_doors is False:
+            self.emit('error.close.already_closed')
+            return
+        self.open_doors = False
+        self.emit('lift.close')
+
+    def arrive(self):
+        self.direction = Direction.none
+        # set top/bottom flags

@@ -78,7 +78,7 @@ Valid input that a client can generate for the engine:
 
 - **`READY`** - Inform the simulation engine that the client has bootstrapped
   and online.
-- **`MOVE <lift-id> <floor-number>`** - Instruct a lift to move to a given
+- **`GOTO <lift-id> <floor-number>`** - Instruct a lift to move to a given
   floor.
 - **`OPEN <lift-id> <direction>`** - Open the doors of a lift, signal to people
   on the floor where the lift will move next [`UP`, `DOWN`, `-`].  As in real
