@@ -61,12 +61,15 @@ class Person(LiftsActor):
             if self._should_get_off(lift):
                 self.emit('person.lift.off', lift)
                 self.location = lift.location
+                lift.passengers.remove(self)
                 if self.location != self.destination:
                     self.call_lift()
             if lift.location == self.destination:
                 self.arrive()
         if self.location == lift.location:
             if self._should_get_on(lift):
+                lift.passengers.add(self)
+                self.location = lift
                 self.emit('person.lift.on', lift)
 
     def call_lift(self):

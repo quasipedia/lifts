@@ -82,12 +82,39 @@ class Lift:
 
 class Lift(LiftsActor):
 
-    @on(INITIATE)
-    def init(self):
-        # Save initial state, emit initial lift.open
-        pass
+    '''
+    A lift in the simulation.
 
-    @on('tick')
-    def move(self):
-        # Advance in the planned actions, emit transit/open/close as necessary
+    Args:
+        description (dict): this is a dictionary that contains:
+            lid: the name of the lift
+            capacity: the maximum capacity
+            transit_time: seconds it takes the lift to transit through a floor
+            accel_time: seconds it takes to start/stop at a floor
+        status (LiftStatus): the initial state of the lift
+        floor (Floor): floor where the lift currently is
+    '''
+
+    def __init__(self, description, location):
+        super().__init__()
+        # Lift description
+        self.lid = description['lid']
+        self.capacity = description['capacity']
+        self.transit_time = description['transit_time']
+        self.accel_time = description['accel_time']
+        # Lift status
+        self.location = location
+        self.direction = Direction.none
+        self.passengers = set()
+
+    def __str__(self):
+        return self.lid
+
+    @property
+    def numeric_location(self):
+        return self.location.numeric_location
+
+    @on('turn.start')
+    def move(self, duration):
+        '''Perform all actions for a turn of `duration` seconds.'''
         pass

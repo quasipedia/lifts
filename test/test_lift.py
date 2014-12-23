@@ -17,5 +17,3 @@ class TestLift(unittest.TestCase):
 
     def tearDown(self):
         sa.reset()
-
-        '''Docstring here!'''
