@@ -109,6 +109,9 @@ World specifications
 
 xxxx
 
+Todo: add possibility of bi-directional trips (get down on a lift,
+get up through another lift)
+
 
 Statistic specifications
 ------------------------
@@ -126,5 +129,6 @@ Ideas:
 - Short distance (floors travelled)
 - Shortest average waiting time
 - Most balanced used of lifts
+- Most democratic (smallest sigma for waiting times)
 - Better all-round performance (weight what above)
 - Best flexibility (good performance in different worlds)
