@@ -41,6 +41,10 @@ class TestLift(unittest.TestCase):
         '''The numeric location of a lift is the current floor number.'''
         self.assertEqual(0, self.lift.numeric_location)
 
+    def test_string_representation(self):
+        '''A lift's string representation is its lid.'''
+        self.assertEqual('SpamLift', '{}'.format(self.lift))
+
     def test_at_top(self):
         '''A lift knows when it is at the top floor it can reach.'''
         self.lift.location = self.top_floor
@@ -61,23 +65,6 @@ class TestLift(unittest.TestCase):
         self.lift.goto(self.lift, self.top_floor)
         self.assertTrue(self.lift.is_moving)
 
-    def test_turn_action_no_action(self):
-        '''A lift will stay still during a turn if no destination.'''
-        self.fail()
-
-    def test_turn_action_update_position(self):
-        '''A lift will update its position during its turn.'''
-        self.fail()
-
-    def test_turn_action_reach_destination(self):
-        '''A lift will stop and change its status if reach destination.'''
-        self.fail()
-
-    def test_goto_ignore(self):
-        '''A goto command is ignored if not specifically addressed to self.'''
-        self.lift.goto('<some-other-lift>', MockFloor(5))
-        self.assertFalse(self.lift.is_moving)
-
     def test_goto_error_out_of_boundaries(self):
         '''A goto command will fail with destination out of top-bottom.'''
         err_msg = 'error.destination.out_of_boundaries'
@@ -92,9 +79,13 @@ class TestLift(unittest.TestCase):
         '''A goto command will fail with lift moving in opposite direction.'''
         err_msg = 'error.destination.conflicting_direction'
         self.lift.location = MockFloor(5)
-        self.lift.goto(self.lift, self.ground_floor)
         with mock.patch.object(self.lift, 'emit') as mock_emit:
+            self.lift.destination = self.ground_floor
             self.lift.goto(self.lift, self.top_floor)
+            mock_emit.assert_called_once_with(err_msg)
+        with mock.patch.object(self.lift, 'emit') as mock_emit:
+            self.lift.destination = self.top_floor
+            self.lift.goto(self.lift, self.ground_floor)
             mock_emit.assert_called_once_with(err_msg)
 
     def test_goto_error_already_still(self):
@@ -125,6 +116,11 @@ class TestLift(unittest.TestCase):
         self.assertTrue(self.lift.is_moving)
         self.assertEqual(middle_floor, self.lift.destination)
 
+    def test_open_ignore(self):
+        '''An open command is ignored if it does not concern self.'''
+        self.lift.open('<some-other-lift>')
+        self.assertFalse(self.lift.open_doors)
+
     def test_open_moving(self):
         '''An open command fails if the lift is still moving.'''
         self.lift.goto(self.lift, self.top_floor)
@@ -142,6 +138,12 @@ class TestLift(unittest.TestCase):
     def test_open_success(self):
         '''A lift can open upon command.'''
         self.lift.open(self.lift)
+        self.assertTrue(self.lift.open_doors)
+
+    def test_close_ignore(self):
+        '''An close command is ignored if it does not concern self.'''
+        self.lift.open(self.lift)
+        self.lift.close('<some-other-lift>')
         self.assertTrue(self.lift.open_doors)
 
     def test_close_already_closed(self):
@@ -167,3 +169,20 @@ class TestLift(unittest.TestCase):
         with mock.patch.object(self.lift, 'emit') as mock_emit:
             self.lift.arrive()
             mock_emit.assert_called_once_with('lift.arrived')
+
+    def test_turn_action_no_action(self):
+        '''A lift will stay still during a turn if no destination.'''
+        self.fail()
+
+    def test_turn_action_update_position(self):
+        '''A lift will update its position during its turn.'''
+        self.fail()
+
+    def test_turn_action_reach_destination(self):
+        '''A lift will stop and change its status if reach destination.'''
+        self.fail()
+
+    def test_goto_ignore(self):
+        '''A goto command is ignored if not specifically addressed to self.'''
+        self.lift.goto('<some-other-lift>', MockFloor(5))
+        self.assertFalse(self.lift.is_moving)
