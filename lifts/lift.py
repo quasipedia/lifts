@@ -21,6 +21,8 @@ class Lift(LiftsActor):
             capacity: the maximum capacity
             transit_time: seconds it takes the lift to transit through a floor
             accel_time: seconds it takes to start/stop at a floor
+            bottom_floor_number: lower reach of the lift shaft
+            top_floor_number: upper reach of the lift shaft
         status (LiftStatus): the initial state of the lift
         floor (Floor): floor where the lift currently is
     '''

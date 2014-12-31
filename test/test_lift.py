@@ -142,7 +142,7 @@ class TestLift(unittest.TestCase):
 
     def test_close_ignore(self):
         '''An close command is ignored if it does not concern self.'''
-        self.lift.open(self.lift)
+        self.lift.open_doors = True
         self.lift.close('<some-other-lift>')
         self.assertTrue(self.lift.open_doors)
 
