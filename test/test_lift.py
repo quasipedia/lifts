@@ -75,7 +75,7 @@ class TestLift(unittest.TestCase):
 
     def test_goto_ignore(self):
         '''A goto command is ignored if not specifically addressed to self.'''
-        self.lift.goto(object(), MockFloor(5))
+        self.lift.goto('<some-other-lift>', MockFloor(5))
         self.assertFalse(self.lift.is_moving)
 
     def test_goto_error_out_of_boundaries(self):
@@ -97,20 +97,40 @@ class TestLift(unittest.TestCase):
             self.lift.goto(self.lift, self.top_floor)
             mock_emit.assert_called_once_with(err_msg)
 
-    def test_goto_error_update_past_floor(self):
-        '''A goto update command will fail with new destination passed by.'''
+    def test_goto_error_already_still(self):
+        '''A goto command will fail if the lift is still at its destination.'''
+        with mock.patch.object(self.lift, 'emit') as mock_emit:
+            self.lift.goto(self.lift, self.ground_floor)
+            mock_emit.assert_called_once_with('error.goto.already_there')
+
+    def test_goto_error_doors_open(self):
+        '''A goto command will fail if doors are open.'''
+        self.lift.open(self.lift)
+        self.lift.goto(self.lift, self.top_floor)
+        with mock.patch.object(self.lift, 'emit') as mock_emit:
+            self.lift.goto(self.lift, self.top_floor)
+            mock_emit.assert_called_once_with('error.goto.doors_are_open')
 
     def test_goto_success_from_still(self):
         '''A goto command will succeed for a lift that is still.'''
-        self.fail()
+        self.lift.goto(self.lift, self.top_floor)
+        self.assertTrue(self.lift.is_moving)
+        self.assertEqual(self.top_floor, self.lift.destination)
 
     def test_goto_success_update(self):
         '''A goto command can be overridden with new one in same direction.'''
-        self.fail()
+        middle_floor = MockFloor(5)
+        self.lift.goto(self.lift, self.top_floor)
+        self.lift.goto(self.lift, middle_floor)
+        self.assertTrue(self.lift.is_moving)
+        self.assertEqual(middle_floor, self.lift.destination)
 
     def test_open_moving(self):
         '''An open command fails if the lift is still moving.'''
-        self.fail()
+        self.lift.goto(self.lift, self.top_floor)
+        with mock.patch.object(self.lift, 'emit') as mock_emit:
+            self.lift.open(self.lift)
+            mock_emit.assert_called_once_with('error.open.still_moving')
 
     def test_open_already_open(self):
         '''An open command will fail for an already open lift.'''

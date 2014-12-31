@@ -87,10 +87,12 @@ class Lift(LiftsActor):
         '''Process the `goto` command.'''
         if self is not lift:
             return
+        # Refuse to go over the top or below bottom
         dest_num = destination.numeric_location
         if not self.bottom_floor_number <= dest_num <= self.top_floor_number:
             self.emit('error.destination.out_of_boundaries')
             return
+        # Refuse to surreptitiously change direction
         curr_num = self.location.numeric_location
         dir_err_msg = 'error.destination.conflicting_direction'
         if self.direction is Direction.down and dest_num >= curr_num:
@@ -99,10 +101,17 @@ class Lift(LiftsActor):
         if self.direction is Direction.up and dest_num <= curr_num:
             self.emit(dir_err_msg)
             return
+        # Refuse to move with open doors
+        if self.open_doors:
+            self.emit('error.goto.doors_are_open')
+        # Error if lift already still at destination
+        if self.location == destination and self.direction is Direction.none:
+            self.emit('error.goto.already_there')
+        # If you made it till here... update the destination!
         self.destination = destination
 
     @on('command.open')
-    def open_doors(self, lift):
+    def open(self, lift):
         '''Process the `open` command.'''
         if self is not lift:
             return
@@ -116,7 +125,7 @@ class Lift(LiftsActor):
         self.emit('lift.open')
 
     @on('command.close')
-    def close_doors(self, lift):
+    def close(self, lift):
         '''Process the `close doors` command.'''
         if self is not lift:
             return
@@ -129,4 +138,3 @@ class Lift(LiftsActor):
     def arrive(self):
         '''Update lift status on arrival to destination.'''
         self.direction = Direction.none
-        # set top/bottom flags
