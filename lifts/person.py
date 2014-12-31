@@ -1,6 +1,6 @@
 from simpleactors import on, KILL
 
-from .common import log, Direction, LiftsActor
+from .common import Direction, LiftsActor
 
 
 class Person(LiftsActor):
