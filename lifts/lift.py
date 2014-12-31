@@ -1,13 +1,8 @@
+from time import time
+
 from simpleactors import on
 
-from .common import (
-    log,
-    LiftsActor,
-    LiftStatus,
-    Event,
-    Command,
-    Message,
-    Direction)
+from .common import LiftsActor, Direction
 
 
 class Lift(LiftsActor):
@@ -36,11 +31,31 @@ class Lift(LiftsActor):
         self.accel_time = description['accel_time']
         self.bottom_floor_number = description['bottom_floor_number']
         self.top_floor_number = description['top_floor_number']
+        # Sanity checks
+        int_keys = ('capacity', 'bottom_floor_number', 'top_floor_number')
+        if any((not isinstance(description[k], int) for k in int_keys)):
+            msg = 'All of {} must be integers!'.format(int_keys)
+            raise ValueError(msg)
+        if self.capacity < 1:
+            msg = 'The lift must be able to carry at least one person!'
+            raise ValueError(msg)
+        if not self.accel_time > self.transit_time:
+            msg = 'Starting/Stopping a lift must take longer than transit!'
+            raise ValueError(msg)
+        if not self.bottom_floor_number < self.top_floor_number:
+            msg = 'The lift must have some excursion!'
+            raise ValueError(msg)
+        curr_num = location.numeric_location
+        if not self.bottom_floor_number <= curr_num <= self.top_floor_number:
+            msg = 'The location of the lift must be within its excursion.'
+            raise ValueError(msg)
         # Lift status
         self.location = location
         self.destination = None
         self.passengers = set()
         self.open_doors = open_doors
+        # Movement tracking
+        self.__carry_seconds = 0
 
     def __str__(self):
         return self.lid
@@ -78,11 +93,6 @@ class Lift(LiftsActor):
         if self.destination.numeric_location > self.location.numeric_location:
             return Direction.up
         return Direction.down
-
-    @on('turn.start')
-    def turn_action(self, duration):
-        '''Perform all actions for a turn of `duration` seconds.'''
-        pass
 
     @on('command.goto')
     def goto(self, lift, destination):
@@ -139,5 +149,31 @@ class Lift(LiftsActor):
 
     def arrive(self):
         '''Update lift status on arrival to destination.'''
+        self.emit('lift.arrived', floor=self.destination)
+        self.__carry_seconds = 0
         self.destination = None
-        self.emit('lift.arrived')
+
+    @on('turn.start')
+    def take_turn(self, duration):
+        '''Process a `turn.start` signal.'''
+        if self.destination is None:
+            return
+        self.__carry_seconds += duration
+        self.consume_seconds()
+
+    def consume_seconds(self):
+        '''Perform all actions for a turn of `duration` seconds.'''
+        destination = self.destination
+        while True:
+            location = self.location
+            stopping = destination in (location.above, location.below)
+            # The lift is about to stop
+            if stopping:
+                fraction = duration / self.accel_time
+                self.__carry_seconds += fraction
+                if self.__carry_seconds > 1:
+                    self.arrive()
+            # The lift is just moving
+            else:
+                fraction = duration / self.transit_time
+            self.__carry_seconds

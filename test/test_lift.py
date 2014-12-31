@@ -17,6 +17,45 @@ class MockFloor:
         self.numeric_location = numeric_location
 
 
+class TestLiftParams(unittest.TestCase):
+
+    '''Tests for the validation of the parameters passed to the Lift class.'''
+
+    def init_lift(self, capacity=2, transit_time=3, accel_time=6,
+                  bottom_floor_number=0, top_floor_number=10, location=5):
+        '''Utility function to initialise a lift.'''
+        description = dict(
+            lid='Spam',
+            capacity=capacity,
+            transit_time=transit_time,
+            accel_time=accel_time,
+            bottom_floor_number=bottom_floor_number,
+            top_floor_number=top_floor_number)
+        Lift(description, MockFloor(location))
+
+    def test_integer(self):
+        '''Capacity and shaft limits for a lift must be integers.'''
+        self.assertRaises(ValueError, self.init_lift, capacity=1.5)
+        self.assertRaises(ValueError, self.init_lift, top_floor_number=10.5)
+        self.assertRaises(ValueError, self.init_lift, bottom_floor_number=0.5)
+
+    def test_capacity(self):
+        '''Capacity must be at least 1.'''
+        self.assertRaises(ValueError, self.init_lift, capacity=0)
+
+    def test_relative_times(self):
+        '''Accel time must be longer than transit time.'''
+        self.assertRaises(ValueError, self.init_lift, accel_time=3)
+
+    def test_excursion(self):
+        '''The lift must have some excursion.'''
+        self.assertRaises(ValueError, self.init_lift, top_floor_number=0)
+
+    def test_initial_location(self):
+        '''Initial location of a lift must be within its excursion.'''
+        self.assertRaises(ValueError, self.init_lift, location=11)
+
+
 class TestLift(unittest.TestCase):
 
     '''Tests for the Lift class.'''
@@ -64,6 +103,11 @@ class TestLift(unittest.TestCase):
         '''A lift can detect if it is moving.'''
         self.lift.goto(self.lift, self.top_floor)
         self.assertTrue(self.lift.is_moving)
+
+    def test_goto_ignore(self):
+        '''A goto command is ignored if not specifically addressed to self.'''
+        self.lift.goto('<some-other-lift>', MockFloor(5))
+        self.assertFalse(self.lift.is_moving)
 
     def test_goto_error_out_of_boundaries(self):
         '''A goto command will fail with destination out of top-bottom.'''
@@ -168,7 +212,7 @@ class TestLift(unittest.TestCase):
         '''A lift notify its arrival with a message.'''
         with mock.patch.object(self.lift, 'emit') as mock_emit:
             self.lift.arrive()
-            mock_emit.assert_called_once_with('lift.arrived')
+            mock_emit.assert_called_once_with('lift.arrived', floor=None)
 
     def test_turn_action_no_action(self):
         '''A lift will stay still during a turn if no destination.'''
@@ -182,7 +226,10 @@ class TestLift(unittest.TestCase):
         '''A lift will stop and change its status if reach destination.'''
         self.fail()
 
-    def test_goto_ignore(self):
-        '''A goto command is ignored if not specifically addressed to self.'''
-        self.lift.goto('<some-other-lift>', MockFloor(5))
-        self.assertFalse(self.lift.is_moving)
+    def test_turn_multiple_transit_updates(self):
+        '''A lift updates position multiple times in one turn if needed.'''
+        self.fail()
+
+    def test_turn_multiple_transit_updates_and_arrive(self):
+        '''A lift can transit and arrive during the same turn.'''
+        self.fail()
