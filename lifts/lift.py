@@ -36,7 +36,6 @@ class Lift(LiftsActor):
         self.top_floor_number = description['top_floor_number']
         # Lift status
         self.location = location
-        self.direction = Direction.none
         self.destination = None
         self.passengers = set()
         self.open_doors = open_doors
@@ -69,6 +68,15 @@ class Lift(LiftsActor):
         '''Return True if the lift is not still.'''
         return self.direction is not Direction.none
 
+    @property
+    def direction(self):
+        '''Return the direction of the lift.'''
+        if self.destination is None:
+            return Direction.none
+        if self.destination.numeric_location > self.location.numeric_location:
+            return Direction.up
+        return Direction.down
+
     @on('turn.start')
     def turn_action(self, duration):
         '''Perform all actions for a turn of `duration` seconds.'''
@@ -79,9 +87,19 @@ class Lift(LiftsActor):
         '''Process the `goto` command.'''
         if self is not lift:
             return
+        dest_num = destination.numeric_location
+        if not self.bottom_floor_number <= dest_num <= self.top_floor_number:
+            self.emit('error.destination.out_of_boundaries')
+            return
+        curr_num = self.location.numeric_location
+        dir_err_msg = 'error.destination.conflicting_direction'
+        if self.direction is Direction.down and dest_num >= curr_num:
+            self.emit(dir_err_msg)
+            return
+        if self.direction is Direction.up and dest_num <= curr_num:
+            self.emit(dir_err_msg)
+            return
         self.destination = destination
-        # Add top/bottom logic
-        # Add direction
 
     @on('command.open')
     def open_doors(self, lift):

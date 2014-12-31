@@ -28,9 +28,10 @@ class TestLift(unittest.TestCase):
             'transit_time': 3,
             'accel_time': 6,
             'bottom_floor_number': 0,
-            'top_floor_number': 0,
+            'top_floor_number': 10,
         }
         self.ground_floor = MockFloor(0)
+        self.top_floor = MockFloor(10)
         self.lift = Lift(description, self.ground_floor)
 
     def tearDown(self):
@@ -38,23 +39,27 @@ class TestLift(unittest.TestCase):
 
     def test_numeric_location(self):
         '''The numeric location of a lift is the current floor number.'''
-        self.fail()
+        self.assertEqual(0, self.lift.numeric_location)
 
     def test_at_top(self):
         '''A lift knows when it is at the top floor it can reach.'''
-        self.fail()
+        self.lift.location = self.top_floor
+        self.assertTrue(self.lift.at_top)
 
     def test_at_bottom(self):
         '''A lift knows when it is at the bottom floor it can reach.'''
-        self.fail()
+        self.assertTrue(self.lift.at_bottom)
 
     def test_full(self):
         '''A lift can detect if it is full.'''
-        self.fail()
+        for n in range(self.lift.capacity):
+            self.lift.passengers.add(object())
+        self.assertTrue(self.lift.full)
 
     def test_is_moving(self):
         '''A lift can detect if it is moving.'''
-        self.fail()
+        self.lift.goto(self.lift, self.top_floor)
+        self.assertTrue(self.lift.is_moving)
 
     def test_turn_action_no_action(self):
         '''A lift will stay still during a turn if no destination.'''
@@ -70,15 +75,27 @@ class TestLift(unittest.TestCase):
 
     def test_goto_ignore(self):
         '''A goto command is ignored if not specifically addressed to self.'''
-        self.fail()
+        self.lift.goto(object(), MockFloor(5))
+        self.assertFalse(self.lift.is_moving)
 
     def test_goto_error_out_of_boundaries(self):
         '''A goto command will fail with destination out of top-bottom.'''
-        self.fail()
+        err_msg = 'error.destination.out_of_boundaries'
+        with mock.patch.object(self.lift, 'emit') as mock_emit:
+            self.lift.goto(self.lift, MockFloor(11))
+            mock_emit.assert_called_once_with(err_msg)
+        with mock.patch.object(self.lift, 'emit') as mock_emit:
+            self.lift.goto(self.lift, MockFloor(-1))
+            mock_emit.assert_called_once_with(err_msg)
 
     def test_goto_error_wrong_direction(self):
         '''A goto command will fail with lift moving in opposite direction.'''
-        self.fail()
+        err_msg = 'error.destination.conflicting_direction'
+        self.lift.location = MockFloor(5)
+        self.lift.goto(self.lift, self.ground_floor)
+        with mock.patch.object(self.lift, 'emit') as mock_emit:
+            self.lift.goto(self.lift, self.top_floor)
+            mock_emit.assert_called_once_with(err_msg)
 
     def test_goto_error_update_past_floor(self):
         '''A goto update command will fail with new destination passed by.'''
