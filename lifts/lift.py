@@ -55,7 +55,7 @@ class Lift(LiftsActor):
         self.passengers = set()
         self.open_doors = open_doors
         # Movement tracking
-        self.__carry_seconds = 0
+        self._carry_seconds = 0
 
     def __str__(self):
         return self.lid
@@ -150,7 +150,7 @@ class Lift(LiftsActor):
     def arrive(self):
         '''Update lift status on arrival to destination.'''
         self.emit('lift.arrived', floor=self.destination)
-        self.__carry_seconds = 0
+        self._carry_seconds = 0
         self.destination = None
 
     @on('turn.start')
@@ -158,22 +158,22 @@ class Lift(LiftsActor):
         '''Process a `turn.start` signal.'''
         if self.destination is None:
             return
-        self.__carry_seconds += duration
+        self._carry_seconds += duration
         self.consume_seconds()
 
     def consume_seconds(self):
         '''Perform all actions for a turn of `duration` seconds.'''
         destination = self.destination
-        while True:
+        while self._carry_seconds > self.transit_time:
             location = self.location
             stopping = destination in (location.above, location.below)
             # The lift is about to stop
-            if stopping:
-                fraction = duration / self.accel_time
-                self.__carry_seconds += fraction
-                if self.__carry_seconds > 1:
-                    self.arrive()
+            if stopping and self._carry_seconds > self.accel_time:
+                self.arrive()
+                break
             # The lift is just moving
+            self._carry_seconds -= self.transit_time
+            if self.direction is Direction.down:
+                self.location = self.location.below
             else:
-                fraction = duration / self.transit_time
-            self.__carry_seconds
+                self.location = self.location.above
