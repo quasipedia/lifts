@@ -134,20 +134,36 @@ class TestLift(unittest.TestCase):
 
     def test_open_already_open(self):
         '''An open command will fail for an already open lift.'''
-        self.fail()
+        self.lift.open(self.lift)
+        with mock.patch.object(self.lift, 'emit') as mock_emit:
+            self.lift.open(self.lift)
+            mock_emit.assert_called_once_with('error.open.already_open')
 
     def test_open_success(self):
         '''A lift can open upon command.'''
-        self.fail()
+        self.lift.open(self.lift)
+        self.assertTrue(self.lift.open_doors)
 
     def test_close_already_closed(self):
         '''A close command will raies if the lift is already closed.'''
-        self.fail()
+        with mock.patch.object(self.lift, 'emit') as mock_emit:
+            self.lift.close(self.lift)
+            mock_emit.assert_called_once_with('error.close.already_closed')
 
     def test_close_success(self):
         '''A lift can close upon command.'''
-        self.fail()
+        self.lift.open(self.lift)
+        self.lift.close(self.lift)
+        self.assertFalse(self.lift.open_doors)
 
-    def test_arrive(self):
-        '''A lift update its status upon arrival.'''
-        self.fail()
+    def test_arrive_status(self):
+        '''A lift resets its destination upon arrival.'''
+        self.lift.destination = self.top_floor
+        self.lift.arrive()
+        self.assertIsNone(self.lift.destination)
+
+    def test_arrive_message(self):
+        '''A lift notify its arrival with a message.'''
+        with mock.patch.object(self.lift, 'emit') as mock_emit:
+            self.lift.arrive()
+            mock_emit.assert_called_once_with('lift.arrived')

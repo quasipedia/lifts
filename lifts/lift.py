@@ -137,4 +137,5 @@ class Lift(LiftsActor):
 
     def arrive(self):
         '''Update lift status on arrival to destination.'''
-        self.direction = Direction.none
+        self.destination = None
+        self.emit('lift.arrived')
