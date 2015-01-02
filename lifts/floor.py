@@ -1,43 +1,38 @@
-from simpleactors import on, Actor, INITIATE
+from simpleactors import on
 
-from .common import Event
+from .common import LiftsActor, Event
 
 
-class Floor:
+class Floor(LiftsActor):
 
-    '''
-    A floor in the simulation.
+    '''A floor in the simulation.
 
-    Args:
-        simulation (Simulation): the simulation in which the floor exists
-        floor_description (dict): this is a dictionary that contains:
-            level (int): the level of the floor
-            is_exit(bool): True if the floor is an exit point of the building
-            is_entry(bool): True if the floor is an entry point of the building
+    Arguments:
+        level: the level of the floor
+        is_exit: True if the floor is an exit point of the building
+        is_entry: True if the floor is an entry point of the building
+        directional: True if the button on the floor is directional
     '''
 
-    def __init__(self, simulation, floor_description):
-        self.simulation = simulation
-        for k, v in floor_description.items():
-            setattr(self, k, v)
-        self.lifts = []
+    def __init__(self, level, is_exit=False, is_entry=False, directional=True):
+        super().__init__()
+        self.numeric_location = level
+        self.is_exit = is_exit
+        self.is_entry = is_entry
+        self.directional = directional
         self.requested_directions = set()
-        log.debug('Initialised floor on level {}', self.level)
 
     def __str__(self):
-        return 'Floor:{}'.format(self.level)
+        return 'Floor: {}'.format(self.numeric_location)
 
-    def push_button(self, direction):
+    on('person.lift.call')
+    def push_button(self, person, direction):
+        if person.numeric_location != self.numeric_location:
+            return
+        if not self.directional:
+            direction = True
         if direction not in self.requested_directions:
             self.requested_directions.add(direction)
-            self.simulation.route(self, Event.call_button, direction=direction)
-
-class Floor(Actor):
-
-    @on(INITIATE)
-    def init(self):
-        # Save initial button state
-        pass
 
     @on('lift.open')
     def lift_has_opened(self):
@@ -51,3 +46,8 @@ class Floor(Actor):
         # If not at floor, skip
         # Unlock button for direction
         pass
+
+
+def generate_floors(description):
+    '''A utility function that will generate all the simulation floors.'''
+    pass
