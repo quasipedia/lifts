@@ -10,7 +10,7 @@ class Person(LiftsActor):
     A person is "moving" as soon as it enters the simulation.  The object gets
     destroyed as soon as the person reaches it's destination
 
-    Aguments:
+    Arguments:
         pid: a human-friendly identifier for the person (string)
         location: the current position of the person (normally a floor, but
             could as well be a lift, although it makes no sense)

@@ -1,5 +1,3 @@
-from time import time
-
 from simpleactors import on
 
 from .common import LiftsActor, Direction
@@ -10,8 +8,8 @@ class Lift(LiftsActor):
     '''
     A lift in the simulation.
 
-    Args:
-        description (dict): this is a dictionary that contains:
+    Arguments:
+        description: this is a dictionary that contains:
             lid: the name of the lift
             capacity: the maximum capacity
             transit_time: seconds it takes the lift to transit through a floor
