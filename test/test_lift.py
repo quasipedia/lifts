@@ -4,10 +4,10 @@ Test suite for the lift module.
 
 import unittest
 import unittest.mock as mock
+from pickle import dumps
 
 import simpleactors as sa
 
-from lifts.common import Direction
 from lifts.lift import Lift
 
 
@@ -69,9 +69,15 @@ class TestLift(unittest.TestCase):
             'bottom_floor_number': 0,
             'top_floor_number': 10,
         }
-        self.ground_floor = MockFloor(0)
-        self.top_floor = MockFloor(10)
+        self.floors = [MockFloor(f) for f in range(0, 11)]
+        self.ground_floor = self.floors[0]
+        self.top_floor = self.floors[10]
+        for floor in self.floors:
+            num = floor.numeric_location
+            floor.below = self.floors[num - 1] if num > 0 else None
+            floor.above = self.floors[num + 1] if num < 10 else None
         self.lift = Lift(description, self.ground_floor)
+        self.maxDiff = None
 
     def tearDown(self):
         sa.reset()
@@ -212,24 +218,57 @@ class TestLift(unittest.TestCase):
         '''A lift notify its arrival with a message.'''
         with mock.patch.object(self.lift, 'emit') as mock_emit:
             self.lift.arrive()
-            mock_emit.assert_called_once_with('lift.arrived', floor=None)
+            mock_emit.assert_called_once_with('lift.arrive', floor=None)
 
     def test_turn_action_no_action(self):
         '''A lift will stay still during a turn if no destination.'''
-        self.fail()
+        before = dumps(self.lift)
+        self.lift.take_turn(1)
+        after = dumps(self.lift)
+        self.assertEqual(before, after)
 
-    def test_turn_action_update_position(self):
-        '''A lift will update its position during its turn.'''
-        self.fail()
+    def test_turn_action_update_position_up(self):
+        '''A lift will update its position during its turn [up].'''
+        self.lift.destination = self.top_floor
+        with mock.patch.object(self.lift, 'emit') as mock_emit:
+            self.lift.take_turn(4)
+            mock_emit.assert_called_once_with('lift.transit',
+                                              floor=self.ground_floor.above)
+
+    def test_turn_action_update_position_down(self):
+        '''A lift will update its position during its turn [down].'''
+        self.lift.destination = self.ground_floor
+        self.lift.location = self.top_floor
+        with mock.patch.object(self.lift, 'emit') as mock_emit:
+            self.lift.take_turn(4)
+            mock_emit.assert_called_once_with('lift.transit',
+                                              floor=self.top_floor.below)
 
     def test_turn_action_reach_destination(self):
         '''A lift will stop and change its status if reach destination.'''
-        self.fail()
+        self.lift.destination = self.floors[1]
+        with mock.patch.object(self.lift, 'emit') as mock_emit:
+            self.lift.take_turn(7)
+            mock_emit.assert_called_once_with('lift.arrive',
+                                              floor=self.ground_floor.above)
+        self.assertFalse(self.lift.is_moving)
 
     def test_turn_multiple_transit_updates(self):
         '''A lift updates position multiple times in one turn if needed.'''
-        self.fail()
+        self.lift.destination = self.top_floor
+        with mock.patch.object(self.lift, 'emit') as mock_emit:
+            self.lift.take_turn(7)
+            expected = (
+                (('lift.transit', ), {'floor': self.floors[1]}),
+                (('lift.transit', ), {'floor': self.floors[2]}))
+            self.assertSequenceEqual(expected, mock_emit.call_args_list)
 
     def test_turn_multiple_transit_updates_and_arrive(self):
         '''A lift can transit and arrive during the same turn.'''
-        self.fail()
+        self.lift.destination = self.floors[2]
+        with mock.patch.object(self.lift, 'emit') as mock_emit:
+            self.lift.take_turn(10)
+            expected = (
+                (('lift.transit', ), {'floor': self.floors[1]}),
+                (('lift.arrive', ), {'floor': self.floors[2]}))
+            self.assertSequenceEqual(expected, mock_emit.call_args_list)

@@ -149,7 +149,7 @@ class Lift(LiftsActor):
 
     def arrive(self):
         '''Update lift status on arrival to destination.'''
-        self.emit('lift.arrived', floor=self.destination)
+        self.emit('lift.arrive', floor=self.destination)
         self._carry_seconds = 0
         self.destination = None
 
@@ -165,11 +165,11 @@ class Lift(LiftsActor):
         '''Perform all actions for a turn of `duration` seconds.'''
         destination = self.destination
         while self._carry_seconds > self.transit_time:
-            location = self.location
-            stopping = destination in (location.above, location.below)
+            decel = destination in (self.location.above, self.location.below)
             # The lift is about to stop
-            if stopping and self._carry_seconds > self.accel_time:
-                self.arrive()
+            if decel:
+                if self._carry_seconds > self.accel_time:
+                    self.arrive()
                 break
             # The lift is just moving
             self._carry_seconds -= self.transit_time
@@ -177,3 +177,4 @@ class Lift(LiftsActor):
                 self.location = self.location.below
             else:
                 self.location = self.location.above
+            self.emit('lift.transit', floor=self.location)
