@@ -1,7 +1,6 @@
 from simpleactors import on, Actor, INITIATE
 
-from log import log
-from enums import Event
+from .common import Event
 
 
 class Floor:

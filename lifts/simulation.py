@@ -1,63 +1,52 @@
 #! /usr/bin/env python3
 '''
 A Lift simulator.
+
+Usage:
+  lifts <sim-file> [<file-dir>]
+  lifts -h | --help
+  lifts --version
+
+Options:
+  -h --help     Show this screen.
+  --version     Show version.
 '''
-from copy import deepcopy
+
+import os
 from time import time, sleep
 from random import choice, gauss
 
-# import toml
-from simpleactors import Director, on, INITIATE
+import toml
+from docopt import docopt
+from simpleactors import Director
 
-from log import log
-from person import Person
-from floor import Floor
-from lift import Lift
-from interface import FileInterface
-from enums import LiftStatus, PersonStatus, Command, Message
+from .person import Person
+from .floor import Floor
+from .lift import Lift
+from .interface import FileInterface
+from .common import Command, Message
 
 
-DEFAULT = {
-    'id': 'default',
-    'building': [
-        {'level': 3, 'is_exit': False, 'is_entry': False},
-        {'level': 2, 'is_exit': False, 'is_entry': False},
-        {'level': 1, 'is_exit': False, 'is_entry': False},
-        {'level': 0, 'is_exit': True, 'is_entry': True},
-    ],
-    'lifts': [
-        {'name': 'main', 'capacity': 4, 'directional': True,
-         'pass_sec': 3, 'accel_sec': 6},
-    ],
-    'simulation': {
-        'duration_min': 5,
-        'population': 5
-    }
-}
-TIME_COMPRESSION = 1  # 360 --> 1h = 10sec
-GRANULARITY = 1  # in real seconds
 POST_END_GRACE_PERIOD = 60  # in seconds
 CLIENT_BOOT_GRACE_PERIOD = 10  # in seconds
 
 
-class Simulation(Director):
+class Simulation:
 
-    @on(INITIATE)
-    def init(self, description, interface):
+    def __init__(self, sim_file, interface_dir='tmp/lifts'):
+        with open('{}.toml'.format(os.path.realpath(sim_file))) as file_:
+            sim = toml.load(file_)
+        from pprint import pprint
+        pprint(sim)
+        exit(0)
+
+        interface = FileInterface(interface_dir)
         self.description = self._time_compress(description)
         self.interface = interface
         self.step_counter = 0
         self._init_floors()
         self._init_lifts()
         self._init_people()
-
-    def _time_compress(self, description):
-        ret = deepcopy(description)
-        for lift in ret['lifts']:
-            for k, v in lift.items():
-                lift[k] = v / TIME_COMPRESSION if k.endswith('_sec') else v
-        ret['simulation']['duration_min'] *= 60 / TIME_COMPRESSION
-        return ret
 
     def _init_floors(self):
         '''Set and return the initial state for all floors.'''
@@ -154,10 +143,11 @@ class Simulation(Director):
 
 
 def main():
-    interface = FileInterface('/tmp/lifts')
-    simulation = Simulation(DEFAULT, interface)
+    args = docopt(__doc__, version='0.1')
+    simulation = Simulation(
+        sim_file=args['<sim-file>'],
+        interface_dir=args['<file-dir>'])
     simulation.run()
-
 
 if __name__ == '__main__':
     main()

@@ -5,7 +5,7 @@ import os
 
 from simpleactors import on, Actor, INITIATE
 
-from enums import Message, Command
+from .common import Message, Command
 
 COMMAND_STRINGS = (
     'MOVE',

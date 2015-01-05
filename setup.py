@@ -46,4 +46,11 @@ setup(
         'dev': ['pypandoc', 'wheel>=0.24.0', 'twine'],
         'test': ['nose', 'rednose', 'coverage'],
     },
+
+    entry_points={
+        'console_scripts': [
+            'lifts=lifts.simulation:main',
+        ],
+    },
+
 )
