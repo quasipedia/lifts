@@ -34,21 +34,14 @@ CLIENT_BOOT_GRACE_PERIOD = 10  # in seconds
 class Simulation:
 
     def __init__(self, sim_file, interface_dir='/tmp/lifts'):
-        sim = self._parse_sim_file(sim_file)
-        interface = FileInterface(interface_dir)
-        from pprint import pprint
-        pprint(sim)
-        exit(0)
-
-        self.description = self._time_compress(description)
-        self.interface = interface
-        self.step_counter = 0
+        self._parse_sim_file(sim_file)
+        FileInterface(interface_dir)
         self._init_floors()
         self._init_lifts()
         self._init_people()
 
-    def _parse_sim_file(self, sim_file):
-        '''Return a fully-populated simulation description object.'''
+    def _load_sim_file(self, sim_file):
+        '''Load, parse and expand the simulation file.'''
         sim_fname = '{}.toml'.format(os.path.realpath(sim_file))
         # Load the master file
         path, _ = os.path.split(sim_fname)
@@ -75,7 +68,7 @@ class Simulation:
         except KeyError:
             print('no seed')
             pass
-        return sim
+        self.description = sim
 
     def _init_floors(self):
         '''Set and return the initial state for all floors.'''
