@@ -14,7 +14,7 @@ Options:
 
 import os
 from time import time, sleep
-from random import choice, gauss
+from random import choice, gauss, seed
 
 import toml
 from docopt import docopt
@@ -33,20 +33,49 @@ CLIENT_BOOT_GRACE_PERIOD = 10  # in seconds
 
 class Simulation:
 
-    def __init__(self, sim_file, interface_dir='tmp/lifts'):
-        with open('{}.toml'.format(os.path.realpath(sim_file))) as file_:
-            sim = toml.load(file_)
+    def __init__(self, sim_file, interface_dir='/tmp/lifts'):
+        sim = self._parse_sim_file(sim_file)
+        interface = FileInterface(interface_dir)
         from pprint import pprint
         pprint(sim)
         exit(0)
 
-        interface = FileInterface(interface_dir)
         self.description = self._time_compress(description)
         self.interface = interface
         self.step_counter = 0
         self._init_floors()
         self._init_lifts()
         self._init_people()
+
+    def _parse_sim_file(self, sim_file):
+        '''Return a fully-populated simulation description object.'''
+        sim_fname = '{}.toml'.format(os.path.realpath(sim_file))
+        # Load the master file
+        path, _ = os.path.split(sim_fname)
+        with open(sim_fname) as file_:
+            sim = toml.load(file_)
+        # Expand the building
+        building_fname = '{}.toml'.format(sim['building']['model'])
+        with open(os.path.join(path, 'buildings', building_fname)) as file_:
+            sim['building'] = toml.load(file_)['floor']
+        # Expand the lifts
+        processed_lifts = []
+        for lift in sim['lifts']:
+            fname = '{}.toml'.format(lift['model'])
+            with open(os.path.join(path, 'lifts', fname)) as file_:
+                exp = toml.load(file_)
+            exp['bottom_floor_number'], exp['top_floor_number'] = lift['range']
+            exp['location'] = lift['location']
+            exp['open_doors'] = lift['open_doors']
+            processed_lifts.append(exp)
+        sim['lifts'] = processed_lifts
+        # If provided, initialise the random seed
+        try:
+            seed(sim['people']['seed'])
+        except KeyError:
+            print('no seed')
+            pass
+        return sim
 
     def _init_floors(self):
         '''Set and return the initial state for all floors.'''
