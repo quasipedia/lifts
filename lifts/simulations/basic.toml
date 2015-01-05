@@ -1,0 +1,23 @@
+id = "Basic"
+
+[clocking]
+total_ticks = 300
+ticks_per_turn = 1
+client_turn_ms = 50
+
+[building]
+model = "four-storey"
+
+[[lifts]]
+lid = "main"
+model = "residential-slow"
+floor_range = [ 0, 4 ]
+location = 0
+open_doors = false
+
+# Providing a seed, will ensure deterministic behavior. If no seed is provided,
+# each simulation run will have people entering the simulation at different
+# points in time
+[people]
+population = 5
+seed = "deterministic"

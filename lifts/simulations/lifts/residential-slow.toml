@@ -1,0 +1,4 @@
+directional = true
+capacity = 4
+transit_time = 3
+accel_time = 6
