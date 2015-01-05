@@ -54,6 +54,7 @@ class Lift(LiftsActor):
         self.destination = None
         self.passengers = set()
         self.open_doors = open_doors
+        self.intent = None
         # Movement tracking
         self._carry_seconds = 0
 
@@ -88,6 +89,8 @@ class Lift(LiftsActor):
     @property
     def direction(self):
         '''Return the direction of the lift.'''
+        if self.intent:
+            return self.intent
         if self.destination is None:
             return Direction.none
         if self.destination.numeric_location > self.location.numeric_location:
@@ -123,7 +126,7 @@ class Lift(LiftsActor):
         self.destination = destination
 
     @on('command.open')
-    def open(self, lift):
+    def open(self, lift, intent=None):
         '''Process the `open` command.'''
         if self is not lift:
             return
@@ -134,6 +137,7 @@ class Lift(LiftsActor):
             self.emit('error.open.already_open')
             return
         self.open_doors = True
+        self.intent = intent  # This is the "promised" direction of travel
         self.emit('lift.open')
 
     @on('command.close')
@@ -145,6 +149,7 @@ class Lift(LiftsActor):
             self.emit('error.close.already_closed')
             return
         self.open_doors = False
+        self.intent = None  # Reset any promise of direction
         self.emit('lift.close')
 
     def arrive(self):

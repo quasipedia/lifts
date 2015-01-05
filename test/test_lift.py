@@ -9,6 +9,7 @@ from pickle import dumps
 import simpleactors as sa
 
 from lifts.lift import Lift
+from lifts.common import Direction
 
 
 class MockFloor:
@@ -190,6 +191,11 @@ class TestLift(unittest.TestCase):
         self.lift.open(self.lift)
         self.assertTrue(self.lift.open_doors)
 
+    def test_open_with_intent(self):
+        '''It is possible to "promise" a direction when opening doors.'''
+        self.lift.open(self.lift, intent=Direction.up)
+        self.assertEqual(self.lift.direction, Direction.up)
+
     def test_close_ignore(self):
         '''An close command is ignored if it does not concern self.'''
         self.lift.open_doors = True
@@ -207,6 +213,12 @@ class TestLift(unittest.TestCase):
         self.lift.open(self.lift)
         self.lift.close(self.lift)
         self.assertFalse(self.lift.open_doors)
+
+    def test_close_reset_intention(self):
+        '''Closing the doors reset the intentions.'''
+        self.lift.open(self.lift, intent=Direction.up)
+        self.lift.close(self.lift)
+        self.assertEqual(Direction.none, self.lift.direction)
 
     def test_arrive_status(self):
         '''A lift resets its destination upon arrival.'''
