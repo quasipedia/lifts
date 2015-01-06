@@ -41,7 +41,7 @@ setup(
     packages=['lifts'],
 
     # Dependencies
-    install_requires=['simpleactors', 'Logbook', 'toml'],
+    install_requires=['simpleactors', 'Logbook', 'toml', 'docopt'],
     extras_require={
         'dev': ['pypandoc', 'wheel>=0.24.0', 'twine'],
         'test': ['nose', 'rednose', 'coverage'],

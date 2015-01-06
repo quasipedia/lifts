@@ -34,7 +34,7 @@ CLIENT_BOOT_GRACE_PERIOD = 10  # in seconds
 class Simulation:
 
     def __init__(self, sim_file, interface_dir='/tmp/lifts'):
-        self._parse_sim_file(sim_file)
+        self._load_sim_file(sim_file)
         FileInterface(interface_dir)
         self._init_floors()
         self._init_lifts()
