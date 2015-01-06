@@ -11,7 +11,7 @@ long_description = pypandoc.convert(readme_fname, 'rst')
 
 setup(
     # Project metadata
-    name='simpleactors',
+    name='lifts',
     version=open(path.join(here, 'VERSION')).read().strip(),
     license='GPLv3+',
     description='An AI game, simulating a building with lifts',
