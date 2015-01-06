@@ -35,8 +35,10 @@ class Simulation:
 
     def __init__(self, sim_file, interface_dir='/tmp/lifts'):
         self._load_sim_file(sim_file)
+        from pprint import pprint; pprint(self.description)
         FileInterface(interface_dir)
         self._init_floors()
+        exit(0)
         self._init_lifts()
         self._init_people()
 
@@ -71,13 +73,16 @@ class Simulation:
         self.description = sim
 
     def _init_floors(self):
-        '''Set and return the initial state for all floors.'''
-        self.floors = {}
-        for floor_description in reversed(self.description['building']):
-            floor = Floor(self, floor_description)
-            self.floors[floor.level] = floor
-        self.entries = [f for f in self.floors.values() if f.is_entry]
-        self.exits = [f for f in self.floors.values() if f.is_exit]
+        '''A utility function that will generate all the simulation floors.'''
+        building = self.description['building']
+        by_level = {floor['level']: Floor(**floor) for floor in building}
+        min_level = min(by_level.keys())
+        max_level = max(by_level.keys())
+        for level, instance in by_level.items():
+            if level > min_level:
+                instance.below = by_level[level - 1]
+            if level < max_level:
+                instance.above = by_level[level + 1]
 
     def _init_lifts(self):
         '''Set and return the initial state for all lifts.'''
