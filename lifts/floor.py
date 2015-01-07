@@ -16,6 +16,7 @@ class Floor(LiftsActor):
 
     def __init__(self, level, is_exit=False, is_entry=False):
         super().__init__()
+        self.level = level
         self.is_exit = is_exit
         self.is_entry = is_entry
         self.requested_directions = set()
