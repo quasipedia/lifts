@@ -37,7 +37,7 @@ class Person(LiftsActor):
 
     def _should_get_off(self, lift):
         '''Return True if the most sensible thing to do is get off the lift.'''
-        compass = self.compass  # Save recomputation for each test
+        compass = self.compass  # Save re-computation for each test
         if compass is Direction.none:
             return True
         if compass != lift.direction:
