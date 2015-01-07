@@ -48,7 +48,7 @@ class TestPersonIn(unittest.TestCase):
 
     def test_string(self):
         '''The string representation of a Person is its pid.'''
-        self.assertEqual('{}'.format(self.person), 'Foo')
+        self.assertEqual('Person: Foo', '{}'.format(self.person))
 
     @mock.patch.object(Person, 'call_lift')
     def test_new_call(self, mock_call):

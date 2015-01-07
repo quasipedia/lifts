@@ -28,7 +28,7 @@ class Person(LiftsActor):
             self.call_lift()
 
     def __str__(self):
-        return self.pid
+        return 'Person: {}'.format(self.pid)
 
     @property
     def numeric_location(self):

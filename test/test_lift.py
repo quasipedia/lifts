@@ -89,7 +89,7 @@ class TestLift(unittest.TestCase):
 
     def test_string_representation(self):
         '''A lift's string representation is its lid.'''
-        self.assertEqual('SpamLift', '{}'.format(self.lift))
+        self.assertEqual('Lift: SpamLift', '{}'.format(self.lift))
 
     def test_at_top(self):
         '''A lift knows when it is at the top floor it can reach.'''

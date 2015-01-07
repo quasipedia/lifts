@@ -57,7 +57,7 @@ class Lift(LiftsActor):
         self._carry_seconds = 0
 
     def __str__(self):
-        return self.lid
+        return 'Lift: {}'.format(self.lid)
 
     @property
     def numeric_location(self):
