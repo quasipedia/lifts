@@ -63,7 +63,7 @@ Possible outputs from the engine:
 - **`TRANSIT <lift-id> <floor-number>`** - A lift is transiting through a given
   floor (see why this is useful to know in the "Note" to "Nin-executable
   commands" below)
-- **`STOP <lift-id> <floor-number>`** - A lift has stopped at a given floor.
+- **`ARRIVED <lift-id> <floor-number>`** - A lift has arrived at a given floor.
 - **`ERROR <text>`** - The command `<command>` has generated an error.
   `<text>` is a multi-word explanation of what the error is.
 - **`END`** - The simulation has ended.

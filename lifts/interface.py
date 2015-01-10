@@ -3,15 +3,16 @@ The interface of lifts.
 '''
 import os
 
-from simpleactors import on, Actor, INITIATE
+from simpleactors import on, INITIATE
 
-from .common import Message, Command
+from .common import LiftsActor, Message, Command
 
-COMMAND_STRINGS = (
-    'MOVE',
-    'OPEN',
-    'CLOSE',
-)
+COMMANDS = {
+    'READY': (0, ),
+    'GOTO': (1, int),  # Floor number
+    'OPEN': (2, str, str),  # lid, intention
+    'CLOSE': (1, str),  # lid
+}
 MESSAGE_STRINGS = (
     'WORLD',
     'TURN',
@@ -19,26 +20,41 @@ MESSAGE_STRINGS = (
     'LIFT_CALL',
     'FLOOR_REQUEST',
     'TRANSIT',
-    'STOP',
+    'ARRIVED',
     'ERROR',
     'END',
     'STATS',
 )
 MESSAGE_TO_STRING = dict(zip(Message, MESSAGE_STRINGS))
-STRING_TO_COMMAND = dict(zip(COMMAND_STRINGS, Command))
+STRING_TO_COMMAND = dict(zip(COMMANDS.keys(), Command))
 
 
-class FileInterface:
+class FileInterface(LiftsActor):
 
+    '''
+    A player interface using input and output files.
+
+    Arguments:
+        directory: the directory where to create the input/output files
+    '''
     msg_components = ('command', 'lift', 'floor')
 
-    def __init__(self, fid):
-        self.in_name = '{}.in'.format(fid)
-        self.out_name = '{}.out'.format(fid)
+    def __init__(self, directory):
+        super().__init__()
+        directory = os.path.realpath(directory)
+        self.in_name = os.path.join(directory, 'lifts.in')
+        self.out_name = os.path.join(directory, 'lifts.out')
         self.cleanup()
-        open(self.in_name, 'w')  # Create the file if not there
+        open(self.in_name, 'w')  # Create the file
         self.fin = open(self.in_name, 'r')
         self.fout = open(self.out_name, 'w')
+
+    def cleanup(self):
+        for fname in (self.in_name, self.out_name):
+            try:
+                os.remove(fname)
+            except FileNotFoundError:
+                pass
 
     def read(self):
         bookmark = self.fin.tell()
@@ -52,7 +68,8 @@ class FileInterface:
 
     def _parse_and_validate(self, line):
         '''Parse and validate a received line, return None for failures.'''
-        bits = line.split() + [None] * 3
+        bits = line.split()
+        # Is there any
         try:
             bits[0] = STRING_TO_COMMAND[bits[0]]
         except KeyError:
@@ -87,17 +104,3 @@ class FileInterface:
             bits.append(entity)
         bits += args
         self.write(' '.join(map(str, bits)))
-
-    def cleanup(self):
-        for fname in (self.in_name, self.out_name):
-            try:
-                os.remove(fname)
-            except FileNotFoundError:
-                pass
-
-
-class FileInterface(Actor):
-
-    @on(INITIATE)
-    def init(self):
-        pass
