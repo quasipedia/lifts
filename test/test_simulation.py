@@ -43,6 +43,10 @@ class TestSimulation(unittest.TestCase):
     def tearDown(self):
         sa.reset()
 
+    def test_load_sim_file(self):
+        '''A simulation file is loaded correctly.'''
+        self.fail()
+
     def test_init_floors_instances(self):
         '''_init_floors create a floor instance for each level.'''
         self.sim._init_floors()
