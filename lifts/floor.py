@@ -40,15 +40,8 @@ class Floor(LiftsActor):
         if direction not in self.requested_directions:
             self.requested_directions.add(direction)
 
-    @on('lift.open')
-    def lift_has_opened(self, lift):
-        # If not at floor, skip
-        # Button reset for lift direction
-        # Prevent lock button for that direction
-        pass
-
     @on('lift.close')
     def lift_has_closed(self, lift):
-        # If not at floor, skip
-        # Unlock button for direction
-        pass
+        if lift.location is not self:
+            return
+        self.requested_directions.discard(lift.direction)

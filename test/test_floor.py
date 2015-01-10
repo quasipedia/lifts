@@ -53,11 +53,6 @@ class TestFloor(unittest.TestCase):
         self.floor.push_button(MockActor(self.floor), Direction.up)
         self.assertIn(Direction.up, self.floor.requested_directions)
 
-    def test_lift_open_wrong_floor(self):
-        '''An open message is ignored if it does not concern the floor.'''
-        self.floor.lift_has_opened(MockActor('not-here'))
-        self.assertFalse(self.mock_emit.called)
-
     def test_lift_close_wrong_floor(self):
         '''A close message is ignored if it dose not concern the floor.'''
         self.floor.lift_has_closed(MockActor('not-here'))
