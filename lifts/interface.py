@@ -3,9 +3,9 @@ The interface of lifts.
 '''
 import os
 
-from simpleactors import on, INITIATE
+from simpleactors import on, Actor, INITIATE
 
-from .common import LiftsActor, Message, Command
+from .common import Message, Command
 
 COMMANDS = {
     'READY': (0, ),
@@ -29,7 +29,7 @@ MESSAGE_TO_STRING = dict(zip(Message, MESSAGE_STRINGS))
 STRING_TO_COMMAND = dict(zip(COMMANDS.keys(), Command))
 
 
-class FileInterface(LiftsActor):
+class FileInterface(Actor):
 
     '''
     A player interface using input and output files.
@@ -42,6 +42,8 @@ class FileInterface(LiftsActor):
     def __init__(self, directory):
         super().__init__()
         directory = os.path.realpath(directory)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
         self.in_name = os.path.join(directory, 'lifts.in')
         self.out_name = os.path.join(directory, 'lifts.out')
         self.cleanup()

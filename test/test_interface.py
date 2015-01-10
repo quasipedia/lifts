@@ -2,6 +2,8 @@
 Test suite for the interface module.
 '''
 
+import os
+import shutil
 import unittest
 import unittest.mock as mock
 
@@ -10,23 +12,52 @@ import simpleactors as sa
 from lifts.interface import FileInterface
 
 
+class TestFileInterfaceInitiation(unittest.TestCase):
+
+    '''Tests for the FileInterface __init__ method.'''
+
+    test_folder = '/tmp/foobar'
+
+    def tearDown(self):
+        try:
+            shutil.rmtree(self.test_folder)
+        except FileNotFoundError:
+            pass
+
+    def test_init_create_directory(self):
+        '''Initiating the interface create the directory if missing.'''
+        with mock.patch.object(os, 'makedirs') as mock_md:
+            try:
+                FileInterface(self.test_folder)
+            except Exception:
+                pass
+            mock_md.assert_called_once_with(self.test_folder)
+
+    def test_init_create_new_files(self):
+        '''Initiating the interface create two new empty files.'''
+        iface = FileInterface(self.test_folder)
+        self.assertTrue(os.path.exists(iface.in_name))
+        self.assertTrue(os.path.exists(iface.out_name))
+
+    def test_init_cleanup(self):
+        '''Initiating the interface calls clean_up().'''
+        with mock.patch.object(FileInterface, 'cleanup') as mock_cu:
+            FileInterface(self.test_folder)
+            self.assertTrue(mock_cu.called)
+
+
 class TestFileInterface(unittest.TestCase):
 
     '''Tests for the FileInterface class.'''
 
+    test_folder = '/tmp/lifts_test'
+
     def setUp(self):
-        pass
+        self.iface = FileInterface(self.test_folder)
 
     def tearDown(self):
         sa.reset()
-
-    def test_init_cleanup(self):
-        '''Initiating the interface clean up old files.'''
-        self.fail()
-
-    def test_init_create_new_files(self):
-        '''Initiating the interface create two new empty files.'''
-        self.fail()
+        shutil.rmtree(self.test_folder)
 
     def test_clean_up(self):
         '''Cleanup remove old interface files.'''
