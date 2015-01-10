@@ -62,13 +62,13 @@ class FileInterface(Actor):
         bookmark = self.fin.tell()
         line = self.fin.readline()
         if line:
-            return line.strip()
+            return line.strip() or None  # Takes care of empty lines
         self.fin.seek(bookmark)
 
     def write(self, line):
         print(line.strip(), file=self.fout, flush=True)
 
-    def _parse_and_validate(self, line):
+    def _process_line(self, line):
         '''Parse and validate a received line, return None for failures.'''
         bits = line.split()
         # Is there any

@@ -59,25 +59,47 @@ class TestFileInterface(unittest.TestCase):
         sa.reset()
         shutil.rmtree(self.test_folder)
 
-    def test_clean_up(self):
+    def test_cleanup(self):
         '''Cleanup remove old interface files.'''
-        self.fail()
+        self.iface.cleanup()
+        self.assertFalse(os.path.exists(self.iface.in_name))
+        self.assertFalse(os.path.exists(self.iface.out_name))
 
-    def test_can_read(self):
+    def test_read(self):
         '''FileInterface can read the input file one line at a time.'''
-        self.fail()
+        with open(self.iface.in_name, 'a') as file_:
+            print('foo', file=file_)
+            print('bar', file=file_)
+        for expected in ('foo', 'bar'):
+            self.assertEqual(expected, self.iface.read())
 
-    def test_empty_lines(self):
+    def test_read_empty_lines(self):
         '''The reader can handle correctly empty lines.'''
-        self.fail()
+        with open(self.iface.in_name, 'a') as file_:
+            print('foo', file=file_)
+            print('', file=file_)
+            print('bar', file=file_)
+        for expected in ('foo', None, 'bar'):
+            self.assertEqual(expected, self.iface.read())
+
+    def test_read_EOF(self):
+        '''The reader can handle correctly EOF.'''
+        with open(self.iface.in_name, 'a') as file_:
+            print('foo', file=file_)
+        for expected in ('foo', None, None):
+            self.assertEqual(expected, self.iface.read())
 
     def test_can_write(self):
         '''FileInterface can write the output file.'''
-        self.fail()
+        self.iface.write('spam')
+        actual = open(self.iface.out_name).read()
+        self.assertEqual('spam\n', actual)
 
-    def test_validation_unknown_command(self):
+    @mock.patch.object(FileInterface, 'send_message')
+    def test_validation_unknown_command(self, mock_sm):
         '''Validation fails for unknown commands.'''
-        self.fail()
+        self.iface._process_line('spam')
+        mock_sm.assert_called_once_with('x')
 
     def test_validation_param_number(self):
         '''Validation fails for wrong number of parameters.'''
