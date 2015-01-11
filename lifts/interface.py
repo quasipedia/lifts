@@ -3,15 +3,17 @@ The interface of lifts.
 '''
 import os
 
-from simpleactors import on, Actor, INITIATE
+from simpleactors import on, Actor, get_by_id
 
-from .common import Message, Command
+from .common import Message, Command, Direction
+from .lift import Lift
+from .floor import Floor
 
 COMMANDS = {
-    'READY': (0, ),
-    'GOTO': (1, int),  # Floor number
-    'OPEN': (2, str, str),  # lid, intention
-    'CLOSE': (1, str),  # lid
+    'READY': (),
+    'GOTO': (Lift, Floor),  # lid, floor number
+    'OPEN': (Lift, Direction),  # lid, intention
+    'CLOSE': (Lift, ),  # lid
 }
 MESSAGE_STRINGS = (
     'WORLD',
@@ -25,8 +27,8 @@ MESSAGE_STRINGS = (
     'END',
     'STATS',
 )
-MESSAGE_TO_STRING = dict(zip(Message, MESSAGE_STRINGS))
-STRING_TO_COMMAND = dict(zip(COMMANDS.keys(), Command))
+MESSAGE_TO_STRING = {getattr(Message, m.lower()): m for m in MESSAGE_STRINGS}
+STRING_TO_COMMAND = {c: getattr(Command, c.lower()) for c in COMMANDS}
 
 
 class FileInterface(Actor):
@@ -62,42 +64,62 @@ class FileInterface(Actor):
         bookmark = self.fin.tell()
         line = self.fin.readline()
         if line:
-            return line.strip() or None  # Takes care of empty lines
+            return line.strip()  # Takes care of empty lines
         self.fin.seek(bookmark)
 
     def write(self, line):
         print(line.strip(), file=self.fout, flush=True)
 
-    def _process_line(self, line):
+    def process_line(self, line):
         '''Parse and validate a received line, return None for failures.'''
         bits = line.split()
-        # Is there any
-        try:
-            bits[0] = STRING_TO_COMMAND[bits[0]]
-        except KeyError:
-            msg = 'Unknown command "{}" in line "{}"'.format(bits[0], line)
+        # Empty line
+        if not bits:
+            self.send_message(Message.error, 'Empty line')
+            return
+        # Unknown command
+        command = bits.pop(0).upper()
+        if command not in COMMANDS:
+            msg = 'Unknown command "{}"'.format(command)
             self.send_message(Message.error, msg)
-            return None
-        if bits[2] is not None:
-            try:
-                bits[2] = int(bits[2])
-            except ValueError:
-                msg = 'Cannot understand floor "{}" in line "{}"'.format(
-                    bits[2], line)
-                self.send_message(Message.error, msg)
-                return None
-        return bits[:3]
+            return
+        # Wrong number of parameters
+        ptypes = COMMANDS[command]
+        if len(bits) != len(ptypes):
+            msg = 'Wrong number of parameters for "{}"'.format(line)
+            self.send_message(Message.error, msg)
+            return
+        # Parse the parameters to objects
+        new_bits = []
+        for bit, type_ in zip(bits, ptypes):
+            if type_ in (Floor, Lift):
+                if type_ is Floor:
+                    try:
+                        bit = int(bit)
+                    except ValueError:
+                        bit = None
+                new_bits.append(get_by_id(type_, bit))
+            if type_ is Direction:
+                try:
+                    new_bits.append(getattr(Direction, bit.lower()))
+                except ValueError:
+                    new_bits.append(None)
+        # Wrong types of parameters
+        print(new_bits)
+        if None in new_bits:
+            msg = 'Invalid parameters for "{}"'.format(line)
+            self.send_message(Message.error, msg)
+            return
+        return [STRING_TO_COMMAND[command]] + new_bits
 
     def get_commands(self):
         while True:
             line = self.read()
-            if line == '':  # empty line
-                continue
             if line is None:  # end of file
                 break
-            payload = self._parse_and_validate(line)
-            if payload is None:
-                break
+            payload = self.process_line(line)
+            if payload is None:  # invalid line
+                continue
             yield payload
 
     def send_message(self, message, entity, *args):

@@ -19,7 +19,7 @@ class Person(LiftsActor):
 
     def __init__(self, pid, location, destination):
         super().__init__()
-        self.pid = pid
+        self.id = pid
         self.location = location
         self.destination = destination
         if self.location == self.destination:
@@ -28,7 +28,7 @@ class Person(LiftsActor):
             self.call_lift()
 
     def __str__(self):
-        return 'Person: {}'.format(self.pid)
+        return 'Person: {}'.format(self.id)
 
     @property
     def numeric_location(self):

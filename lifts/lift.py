@@ -23,7 +23,7 @@ class Lift(LiftsActor):
     def __init__(self, description, location, open_doors=False):
         super().__init__()
         # Lift description
-        self.lid = description['lid']
+        self.id = description['lid']
         self.capacity = description['capacity']
         self.transit_time = description['transit_time']
         self.accel_time = description['accel_time']
@@ -57,7 +57,7 @@ class Lift(LiftsActor):
         self._carry_seconds = 0
 
     def __str__(self):
-        return 'Lift: {}'.format(self.lid)
+        return 'Lift: {}'.format(self.id)
 
     @property
     def numeric_location(self):

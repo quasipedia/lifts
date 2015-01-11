@@ -7,10 +7,10 @@ import logbook
 Direction = Enum('Dirs', 'up down none')
 Event = Enum('Event', 'call_button floor_button')
 LiftStatus = Enum('LiftStatus', 'moving open closed')
-Command = Enum('Command', 'move open close')
+Command = Enum('Command', 'ready goto open close')
 Message = Enum(
     'Message',
-    'world turn ready lift_call floor_request transit stop error end stats')
+    'world turn ready lift_call floor_request transit arrived error end stats')
 
 log = logbook.Logger('Lifts')
 
