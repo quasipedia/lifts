@@ -137,9 +137,20 @@ class TestFileInterface(unittest.TestCase):
         self.assertTrue(message.startswith('Wrong number of parameters'))
 
     @mock.patch.object(lif.FileInterface, 'send_message')
-    def test_validation_params(self, mock_sm):
-        '''Validation fails for invalid parameters.'''
+    def test_validation_params_floor_ko(self, mock_sm):
+        '''Validation fails for invalid parameters (Lift, Floor).'''
         self.iface.process_line('goto foo bar')
+        calls = mock_sm.call_args_list
+        self.assertEqual(1, len(calls))
+        code = calls[0][0][0]
+        message = calls[0][0][1]
+        self.assertEqual(Message.error, code)
+        self.assertTrue(message.startswith('Invalid parameters'))
+
+    @mock.patch.object(lif.FileInterface, 'send_message')
+    def test_validation_params_direction_ko(self, mock_sm):
+        '''Validation fails for invalid parameters (Lift, Direction).'''
+        self.iface.process_line('open foo bar')
         calls = mock_sm.call_args_list
         self.assertEqual(1, len(calls))
         code = calls[0][0][0]

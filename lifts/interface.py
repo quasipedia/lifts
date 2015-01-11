@@ -102,10 +102,9 @@ class FileInterface(Actor):
             if type_ is Direction:
                 try:
                     new_bits.append(getattr(Direction, bit.lower()))
-                except ValueError:
+                except AttributeError:
                     new_bits.append(None)
         # Wrong types of parameters
-        print(new_bits)
         if None in new_bits:
             msg = 'Invalid parameters for "{}"'.format(line)
             self.send_message(Message.error, msg)
