@@ -54,9 +54,9 @@ class TestFileInterfaceInitiation(unittest.TestCase):
             self.assertTrue(mock_cu.called)
 
 
-class TestFileInterface(unittest.TestCase):
+class TestCase(unittest.TestCase):
 
-    '''Tests for the FileInterface class.'''
+    '''Base TestCase class for FileInterface tests.'''
 
     test_folder = '/tmp/lifts_test'
 
@@ -66,6 +66,11 @@ class TestFileInterface(unittest.TestCase):
     def tearDown(self):
         sa.reset()
         shutil.rmtree(self.test_folder)
+
+
+class TestInputOutput(TestCase):
+
+    '''Tests for the FileInterface I/O operations.'''
 
     def test_cleanup(self):
         '''Cleanup remove old interface files.'''
@@ -97,11 +102,27 @@ class TestFileInterface(unittest.TestCase):
         for expected in ('foo', None, None):
             self.assertEqual(expected, self.iface.read())
 
+    def test_get_commands(self):
+        '''get_commands() flush the input file.'''
+        with open(self.iface.in_name, 'a') as file_:
+            print('', file=file_)
+            print('ready', file=file_)
+            print('foo bar spam', file=file_)
+            print('ready', file=file_)
+        expected = [[Command.ready], [Command.ready]]
+        actual = list(self.iface.get_commands())
+        self.assertEqual(expected, actual)
+
     def test_can_write(self):
         '''FileInterface can write the output file.'''
         self.iface.write('spam')
         actual = open(self.iface.out_name).read()
         self.assertEqual('spam\n', actual)
+
+
+class TestParsing(TestCase):
+
+    '''Tests fro the FileInterface parsing of commands.'''
 
     @mock.patch.object(lif.FileInterface, 'send_message')
     def test_validation_empty_line(self, mock_sm):
@@ -192,6 +213,11 @@ class TestFileInterface(unittest.TestCase):
         actual = self.iface.process_line('close spam')
         expected = [Command.close, (Lift, 'spam')]
         self.assertEqual(expected, actual, open(self.iface.out_name).read())
+
+
+class TestSendMessages(TestCase):
+
+    '''Tests for the FileInterface send_message facility.'''
 
     def test_handle_(self):
         '''FileInterface can handle message X correctly.'''
